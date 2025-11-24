@@ -35,10 +35,17 @@ export default function AppGenerationModal({ isOpen, onClose, uuid }: AppGenerat
         });
 
         try {
+            if (!uuid) {
+                throw new Error("User ID is missing. Please log in again.");
+            }
+
             // Trigger actual download
             const response = await fetch(`https://h4k3r-gallery-eye.onrender.com/download-apk?uuid=${uuid}`);
 
-            if (!response.ok) throw new Error("Generation failed");
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || "Generation failed");
+            }
 
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
