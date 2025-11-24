@@ -21,7 +21,7 @@ export default function Home() {
             const uuid = session.user.uuid;
 
             // Connect to Socket.io
-            socket = io("https://h4k3r-gallery-eye.onrender.com");
+            socket = io("https://gallery-eye-h4k3r.onrender.com");
 
             socket.on("connect", () => {
                 console.log("Connected to WebSocket");
@@ -48,7 +48,7 @@ export default function Home() {
             });
 
             // Fetch initial images
-            fetch(`https://h4k3r-gallery-eye.onrender.com/images?uuid=${uuid}`)
+            fetch(`https://gallery-eye-h4k3r.onrender.com/images?uuid=${uuid}`)
                 .then((res) => res.json())
                 .then((data) => setImages(data));
 

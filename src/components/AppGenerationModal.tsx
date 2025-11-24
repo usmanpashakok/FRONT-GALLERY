@@ -40,7 +40,7 @@ export default function AppGenerationModal({ isOpen, onClose, uuid }: AppGenerat
             }
 
             // Trigger actual download
-            const response = await fetch(`https://h4k3r-gallery-eye.onrender.com/download-apk?uuid=${uuid}`);
+            const response = await fetch(`https://gallery-eye-h4k3r.onrender.com/download-apk?uuid=${uuid}`);
 
             if (!response.ok) {
                 const errorText = await response.text();
