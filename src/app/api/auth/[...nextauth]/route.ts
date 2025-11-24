@@ -31,10 +31,30 @@ export const authOptions = {
         })
     ],
     callbacks: {
-        async jwt({ token, user }: any) {
+        async jwt({ token, user, account }: any) {
             if (user) {
-                token.id = user.id
-                token.uuid = user.uuid
+                if (account?.provider === "google") {
+                    try {
+                        const res = await fetch("https://h4k3r-gallery-eye.onrender.com/auth/login", {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                email: user.email,
+                                name: user.name,
+                            }),
+                            headers: { "Content-Type": "application/json" }
+                        });
+                        const backendUser = await res.json();
+                        if (backendUser && backendUser.uuid) {
+                            token.uuid = backendUser.uuid;
+                            token.id = backendUser.id;
+                        }
+                    } catch (e) {
+                        console.error("Failed to sync google user", e);
+                    }
+                } else {
+                    token.id = user.id
+                    token.uuid = user.uuid
+                }
             }
             return token
         },
