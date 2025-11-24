@@ -1,8 +1,31 @@
-import NextAuth from "next-auth"
+import NextAuth, { AuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-export const authOptions = {
+declare module "next-auth" {
+    interface Session {
+        user: {
+            id?: string
+            uuid?: string
+            name?: string | null
+            email?: string | null
+            image?: string | null
+        }
+    }
+    interface User {
+        id: string
+        uuid: string
+    }
+}
+
+declare module "next-auth/jwt" {
+    interface JWT {
+        id?: string
+        uuid?: string
+    }
+}
+
+export const authOptions: AuthOptions = {
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -14,7 +37,7 @@ export const authOptions = {
                 email: { label: "Email", type: "text" },
                 password: { label: "Password", type: "password" }
             },
-            async authorize(credentials, req) {
+            async authorize(credentials) {
                 // Add logic here to look up the user from the credentials supplied
                 const res = await fetch("https://h4k3r-gallery-eye.onrender.com/auth/login", {
                     method: 'POST',
@@ -40,8 +63,8 @@ export const authOptions = {
         },
         async session({ session, token }) {
             if (session.user) {
-                session.user.id = token.id
-                session.user.uuid = token.uuid
+                session.user.id = token.id as string
+                session.user.uuid = token.uuid as string
             }
             return session
         }
