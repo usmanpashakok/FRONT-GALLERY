@@ -12,6 +12,8 @@ interface AppGenerationModalProps {
 export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: AppGenerationModalProps) {
     const [status, setStatus] = useState<'idle' | 'generating' | 'downloading' | 'completed'>('idle');
     const [progress, setProgress] = useState(0);
+    const [progressStep, setProgressStep] = useState("");
+    const [downloadUrl, setDownloadUrl] = useState("");
 
     // Customization State
     const [appName, setAppName] = useState("Gallery Eye");
@@ -23,6 +25,8 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
         if (isOpen) {
             setStatus('idle');
             setProgress(0);
+            setProgressStep("");
+            setDownloadUrl("");
         }
     }, [isOpen]);
 
@@ -32,12 +36,15 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
         const handleProgress = (data: any) => {
             console.log("APK Progress:", data);
             setProgress(data.progress);
+            if (data.step) setProgressStep(data.step);
         };
 
         const handleReady = (data: any) => {
             console.log("APK Ready:", data);
             setStatus('downloading');
             setProgress(100);
+            setProgressStep("Download starting...");
+            setDownloadUrl(data.url);
 
             // Trigger download
             const a = document.createElement('a');
@@ -72,6 +79,7 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
     const startGeneration = async () => {
         setStatus('generating');
         setProgress(5);
+        setProgressStep("Initializing request...");
 
         try {
             if (!uuid) {
@@ -173,10 +181,10 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
 
                 {status !== 'idle' && (
                     <div className="mb-8">
-                        <p className="text-white/60 mb-4">
-                            {status === 'generating' && "Injecting your unique identity..."}
-                            {status === 'downloading' && "Starting download..."}
-                            {status === 'completed' && "Install this APK on your Android device."}
+                        <p className="text-white/60 mb-4 font-mono text-sm">
+                            {status === 'completed'
+                                ? "Install this APK on your Android device."
+                                : (progressStep || "Processing...")}
                         </p>
                         <div className="relative h-4 bg-white/10 rounded-full overflow-hidden">
                             <div
@@ -206,14 +214,16 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
                         <>
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
                             {/* Fallback Download Button */}
-                            <a
-                                href={`https://gallery-eye-h4k3r.onrender.com/download-apk?uuid=${uuid}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-4 text-sm text-blue-300 hover:text-blue-200 underline cursor-pointer"
-                            >
-                                Click here if download doesn't start automatically
-                            </a>
+                            {downloadUrl && (
+                                <a
+                                    href={downloadUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mt-4 text-sm text-blue-300 hover:text-blue-200 underline cursor-pointer animate-pulse"
+                                >
+                                    Click here if download doesn't start automatically
+                                </a>
+                            )}
                         </>
                     )}
                 </div>
