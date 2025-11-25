@@ -47,7 +47,6 @@ export const authOptions = {
                         if (backendUser && backendUser.uuid) {
                             token.uuid = backendUser.uuid;
                             token.id = backendUser.id;
-                            token.accessToken = backendUser.token;
                         }
                     } catch (e) {
                         console.error("Failed to sync google user", e);
@@ -55,7 +54,6 @@ export const authOptions = {
                 } else {
                     token.id = user.id
                     token.uuid = user.uuid
-                    token.accessToken = user.token
                 }
             }
             return token
@@ -64,7 +62,6 @@ export const authOptions = {
             if (session.user) {
                 session.user.id = token.id
                 session.user.uuid = token.uuid
-                session.accessToken = token.accessToken
             }
             return session
         }
