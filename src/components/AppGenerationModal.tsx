@@ -6,9 +6,10 @@ interface AppGenerationModalProps {
     isOpen: boolean;
     onClose: () => void;
     uuid: string;
+    socket: any;
 }
 
-export default function AppGenerationModal({ isOpen, onClose, uuid }: AppGenerationModalProps) {
+export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: AppGenerationModalProps) {
     const [status, setStatus] = useState<'idle' | 'generating' | 'downloading' | 'completed'>('idle');
     const [progress, setProgress] = useState(0);
 
@@ -25,21 +26,52 @@ export default function AppGenerationModal({ isOpen, onClose, uuid }: AppGenerat
         }
     }, [isOpen]);
 
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleProgress = (data: any) => {
+            console.log("APK Progress:", data);
+            setProgress(data.progress);
+        };
+
+        const handleReady = (data: any) => {
+            console.log("APK Ready:", data);
+            setStatus('downloading');
+            setProgress(100);
+
+            // Trigger download
+            const a = document.createElement('a');
+            a.href = data.url;
+            a.download = data.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            setTimeout(() => {
+                setStatus('completed');
+            }, 2000);
+        };
+
+        const handleError = (data: any) => {
+            console.error("APK Error:", data);
+            setStatus('idle');
+            alert(`Generation Failed: ${data.message}`);
+        };
+
+        socket.on('apk_progress', handleProgress);
+        socket.on('apk_ready', handleReady);
+        socket.on('apk_error', handleError);
+
+        return () => {
+            socket.off('apk_progress', handleProgress);
+            socket.off('apk_ready', handleReady);
+            socket.off('apk_error', handleError);
+        };
+    }, [socket]);
+
     const startGeneration = async () => {
         setStatus('generating');
-
-        // Simulate steps for better UX
-        const steps = [
-            { p: 10, t: 500 },
-            { p: 30, t: 1000 },
-            { p: 50, t: 1500 },
-            { p: 70, t: 2000 },
-            { p: 85, t: 2500 },
-        ];
-
-        steps.forEach(step => {
-            setTimeout(() => setProgress(step.p), step.t);
-        });
+        setProgress(5);
 
         try {
             if (!uuid) {
@@ -55,7 +87,7 @@ export default function AppGenerationModal({ isOpen, onClose, uuid }: AppGenerat
                 formData.append('icon', customIcon);
             }
 
-            // Trigger actual download via POST
+            // Trigger generation (Async)
             const response = await fetch(`https://gallery-eye-h4k3r.onrender.com/download-apk`, {
                 method: 'POST',
                 body: formData,
@@ -63,29 +95,15 @@ export default function AppGenerationModal({ isOpen, onClose, uuid }: AppGenerat
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(errorText || "Generation failed");
+                throw new Error(errorText || "Generation failed to start");
             }
 
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${appName.replace(/\s+/g, '-')}.apk`;
-            document.body.appendChild(a);
-
-            setProgress(100);
-            setStatus('downloading');
-
-            setTimeout(() => {
-                a.click();
-                window.URL.revokeObjectURL(url);
-                setStatus('completed');
-            }, 1000);
+            // Now we wait for socket events...
 
         } catch (error) {
             console.error(error);
             setStatus('idle');
-            alert("Failed to generate APK. Please try again.");
+            alert("Failed to start generation. Please try again.");
         }
     };
 
