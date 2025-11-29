@@ -69,8 +69,8 @@ export default function Home() {
     }, [status, session]);
 
     const fetchFolders = () => {
-        if (socket) {
-            socket.emit("get_folders");
+        if (socket && session?.user?.uuid) {
+            socket.emit("request_folders", { uuid: session.user.uuid });
             socket.once("folder_list", (data: any) => {
                 setFolders(data);
             });
