@@ -1,258 +1,244 @@
-'use client';
+import React, { useState, useEffect, useMemo } from 'react';
+import { io } from 'socket.io-client';
 
-import { useState } from 'react';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
-
-interface MediaFile {
+interface GalleryFile {
     id: string;
     url: string;
     created_at: string;
     resource_type: 'image' | 'video';
-    format?: string;
+    format: string;
 }
 
 interface GalleryViewerProps {
-    media: MediaFile[];
+    uuid: string;
+    backendUrl: string;
 }
 
-export default function GalleryViewer({ media }: GalleryViewerProps) {
-    const [selectedMedia, setSelectedMedia] = useState<MediaFile | null>(null);
-    const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-    const [viewMode, setViewMode] = useState<'all' | 'images' | 'videos'>('all');
+export default function GalleryViewer({ uuid, backendUrl }: GalleryViewerProps) {
+    const [files, setFiles] = useState<GalleryFile[]>([]);
+    const [activeTab, setActiveTab] = useState<'all' | 'image' | 'video'>('all');
+    const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+    const [viewingFile, setViewingFile] = useState<GalleryFile | null>(null);
+    const [isZipping, setIsZipping] = useState(false);
 
-    const filteredMedia = media.filter(item => {
-        if (viewMode === 'images') return item.resource_type === 'image';
-        if (viewMode === 'videos') return item.resource_type === 'video';
-        return true;
-    });
+    // Socket Connection
+    useEffect(() => {
+        const socket = io(backendUrl);
+        socket.emit('join_room', { uuid });
 
+        socket.on('new_image', (newFile: GalleryFile) => {
+            setFiles(prev => [newFile, ...prev]);
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, [uuid, backendUrl]);
+
+    // Fetch Initial Data
+    useEffect(() => {
+        fetch(`${backendUrl}/images?uuid=${uuid}`)
+            .then(res => res.json())
+            .then(data => setFiles(data))
+            .catch(err => console.error(err));
+    }, [uuid, backendUrl]);
+
+    // Filter Files
+    const filteredFiles = useMemo(() => {
+        if (activeTab === 'all') return files;
+        return files.filter(f => f.resource_type === activeTab);
+    }, [files, activeTab]);
+
+    // Selection Logic
     const toggleSelection = (id: string) => {
-        const newSelected = new Set(selectedItems);
-        if (newSelected.has(id)) {
-            newSelected.delete(id);
+        const newSet = new Set(selectedFiles);
+        if (newSet.has(id)) newSet.delete(id);
+        else newSet.add(id);
+        setSelectedFiles(newSet);
+    };
+
+    const selectAll = () => {
+        if (selectedFiles.size === filteredFiles.length) {
+            setSelectedFiles(new Set());
         } else {
-            newSelected.add(id);
+            setSelectedFiles(new Set(filteredFiles.map(f => f.id)));
         }
-        setSelectedItems(newSelected);
     };
 
-    const downloadSingle = async (url: string, id: string) => {
+    // Download Logic
+    const handleDownloadZip = async () => {
+        if (selectedFiles.size === 0) return;
+        setIsZipping(true);
+
+        const filesToDownload = files
+            .filter(f => selectedFiles.has(f.id))
+            .map(f => ({
+                url: f.url,
+                filename: `${f.resource_type}_${f.created_at}.${f.format}`
+            }));
+
         try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const filename = `${id.split('/').pop()}.${blob.type.split('/')[1]}`;
-            saveAs(blob, filename);
+            const response = await fetch(`${backendUrl}/download-zip`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ files: filesToDownload })
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'gallery_download.zip';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                setSelectedFiles(new Set());
+            }
         } catch (error) {
-            console.error('Download failed:', error);
+            console.error('Download failed', error);
+            alert('Download failed');
+        } finally {
+            setIsZipping(false);
         }
-    };
-
-    const downloadSelected = async () => {
-        if (selectedItems.size === 0) return;
-
-        const zip = new JSZip();
-        const selectedMedia = media.filter(item => selectedItems.has(item.id));
-
-        for (const item of selectedMedia) {
-            try {
-                const response = await fetch(item.url);
-                const blob = await response.blob();
-                const filename = `${item.id.split('/').pop()}.${blob.type.split('/')[1]}`;
-                zip.file(filename, blob);
-            } catch (error) {
-                console.error(`Failed to add ${item.id}:`, error);
-            }
-        }
-
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
-        saveAs(zipBlob, `gallery-eye-${Date.now()}.zip`);
-        setSelectedItems(new Set());
-    };
-
-    const downloadAll = async () => {
-        const zip = new JSZip();
-
-        for (const item of filteredMedia) {
-            try {
-                const response = await fetch(item.url);
-                const blob = await response.blob();
-                const filename = `${item.id.split('/').pop()}.${blob.type.split('/')[1]}`;
-                zip.file(filename, blob);
-            } catch (error) {
-                console.error(`Failed to add ${item.id}:`, error);
-            }
-        }
-
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
-        saveAs(zipBlob, `gallery-eye-all-${Date.now()}.zip`);
     };
 
     return (
-        <div>
-            {/* Filter & Action Bar */}
-            <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                {/* View Mode Toggle */}
-                <div className="flex gap-2 bg-gray-800 p-1 rounded-lg">
-                    <button
-                        onClick={() => setViewMode('all')}
-                        className={`px-4 py-2 rounded-md transition-colors ${viewMode === 'all'
-                                ? 'bg-purple-600 text-white'
-                                : 'text-gray-400 hover:text-white'
-                            }`}
-                    >
-                        All ({media.length})
-                    </button>
-                    <button
-                        onClick={() => setViewMode('images')}
-                        className={`px-4 py-2 rounded-md transition-colors ${viewMode === 'images'
-                                ? 'bg-purple-600 text-white'
-                                : 'text-gray-400 hover:text-white'
-                            }`}
-                    >
-                        📷 Photos ({media.filter(m => m.resource_type === 'image').length})
-                    </button>
-                    <button
-                        onClick={() => setViewMode('videos')}
-                        className={`px-4 py-2 rounded-md transition-colors ${viewMode === 'videos'
-                                ? 'bg-purple-600 text-white'
-                                : 'text-gray-400 hover:text-white'
-                            }`}
-                    >
-                        🎥 Videos ({media.filter(m => m.resource_type === 'video').length})
-                    </button>
+        <div className="min-h-screen bg-gray-900 text-white p-6 font-sans">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+                        Gallery Eye
+                    </h1>
+                    <p className="text-gray-400 text-sm mt-1">Synced Media Vault</p>
+                </div>
+
+                {/* Tabs */}
+                <div className="flex bg-gray-800 rounded-full p-1">
+                    {['all', 'image', 'video'].filter(tab => {
+                        if (tab === 'all') return true;
+                        return files.some(f => f.resource_type === tab);
+                    }).map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab as any)}
+                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === tab
+                                    ? 'bg-blue-600 text-white shadow-lg'
+                                    : 'text-gray-400 hover:text-white'
+                                }`}
+                        >
+                            {tab.charAt(0).toUpperCase() + tab.slice(1)}s
+                        </button>
+                    ))}
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2">
-                    {selectedItems.size > 0 && (
+                <div className="flex gap-3">
+                    {selectedFiles.size > 0 && (
                         <button
-                            onClick={downloadSelected}
-                            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                            onClick={handleDownloadZip}
+                            disabled={isZipping}
+                            className="px-5 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
                         >
-                            📥 Download Selected ({selectedItems.size})
+                            {isZipping ? 'Zipping...' : `Download (${selectedFiles.size})`}
                         </button>
                     )}
-                    {filteredMedia.length > 0 && (
-                        <button
-                            onClick={downloadAll}
-                            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
-                        >
-                            📦 Download All
-                        </button>
-                    )}
+                    <button
+                        onClick={selectAll}
+                        className="px-5 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-semibold transition-colors"
+                    >
+                        {selectedFiles.size === filteredFiles.length ? 'Deselect All' : 'Select All'}
+                    </button>
                 </div>
             </div>
 
-            {/* Gallery Grid */}
-            {filteredMedia.length === 0 ? (
-                <div className="text-center py-20 text-gray-400">
-                    <p className="text-xl">No {viewMode === 'all' ? 'media' : viewMode} yet</p>
-                    <p className="text-sm mt-2">Upload some files from your Android app</p>
+            {/* Grid */}
+            {filteredFiles.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                    <p className="text-lg">No {activeTab}s found</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {filteredMedia.map((item) => (
-                        <div key={item.id} className="relative group">
-                            {/* Thumbnail */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {filteredFiles.map(file => (
+                        <div
+                            key={file.id}
+                            className={`relative group aspect-square rounded-xl overflow-hidden bg-gray-800 border-2 transition-all ${selectedFiles.has(file.id) ? 'border-blue-500' : 'border-transparent hover:border-gray-600'
+                                }`}
+                        >
+                            {/* Media */}
                             <div
-                                onClick={() => setSelectedMedia(item)}
-                                className="aspect-square bg-gray-800 rounded-lg overflow-hidden cursor-pointer relative"
+                                className="w-full h-full cursor-pointer"
+                                onClick={() => setViewingFile(file)}
                             >
-                                {item.resource_type === 'image' ? (
-                                    <img
-                                        src={item.url}
-                                        alt={item.id}
-                                        className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                                    />
+                                {file.resource_type === 'video' ? (
+                                    <video src={file.url} className="w-full h-full object-cover" muted />
                                 ) : (
-                                    <div className="relative w-full h-full">
-                                        <video
-                                            src={item.url}
-                                            className="w-full h-full object-cover"
-                                            muted
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                                            <div className="bg-white/90 rounded-full p-3">
-                                                <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <img src={file.url} alt="Gallery Item" className="w-full h-full object-cover" loading="lazy" />
                                 )}
-
-                                {/* Selection Checkbox */}
-                                <div
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleSelection(item.id);
-                                    }}
-                                    className="absolute top-2 right-2 z-10"
-                                >
-                                    <div
-                                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${selectedItems.has(item.id)
-                                                ? 'bg-purple-600 border-purple-600'
-                                                : 'bg-black/50 border-white/70'
-                                            }`}
-                                    >
-                                        {selectedItems.has(item.id) && (
-                                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                        )}
-                                    </div>
-                                </div>
                             </div>
 
-                            {/* Date */}
-                            <p className="text-xs text-gray-400 mt-1 text-center">
-                                {new Date(item.created_at).toLocaleDateString()}
-                            </p>
+                            {/* Overlay Info */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                            {/* Checkbox */}
+                            <div className="absolute top-2 right-2 z-10">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedFiles.has(file.id)}
+                                    onChange={() => toggleSelection(file.id)}
+                                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                />
+                            </div>
+
+                            {/* Video Indicator */}
+                            {file.resource_type === 'video' && (
+                                <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded text-xs text-white flex items-center gap-1">
+                                    <span>▶</span> Video
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>
             )}
 
-            {/* Lightbox Viewer */}
-            {selectedMedia && (
-                <div
-                    className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
-                    onClick={() => setSelectedMedia(null)}
-                >
+            {/* Modal Viewer */}
+            {viewingFile && (
+                <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4">
                     <button
-                        className="absolute top-4 right-4 text-white text-4xl hover:text-gray-300"
-                        onClick={() => setSelectedMedia(null)}
+                        onClick={() => setViewingFile(null)}
+                        className="absolute top-4 right-4 text-white/70 hover:text-white text-4xl font-light"
                     >
-                        ×
+                        &times;
                     </button>
 
-                    <div
-                        className="max-w-5xl max-h-full flex flex-col items-center"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {selectedMedia.resource_type === 'image' ? (
-                            <img
-                                src={selectedMedia.url}
-                                alt={selectedMedia.id}
-                                className="max-w-full max-h-[80vh] object-contain rounded-lg"
-                            />
-                        ) : (
+                    <div className="max-w-5xl max-h-[90vh] w-full flex flex-col items-center">
+                        {viewingFile.resource_type === 'video' ? (
                             <video
-                                src={selectedMedia.url}
+                                src={viewingFile.url}
                                 controls
                                 autoPlay
-                                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                                className="max-w-full max-h-[80vh] rounded-lg shadow-2xl"
+                            />
+                        ) : (
+                            <img
+                                src={viewingFile.url}
+                                alt="Full View"
+                                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
                             />
                         )}
 
-                        <div className="mt-4 flex gap-3">
-                            <button
-                                onClick={() => downloadSingle(selectedMedia.url, selectedMedia.id)}
-                                className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg transition-colors"
+                        <div className="mt-6 flex gap-4">
+                            <a
+                                href={viewingFile.url}
+                                download
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full text-white font-medium transition-colors"
                             >
-                                📥 Download
-                            </button>
+                                Download Original
+                            </a>
                         </div>
                     </div>
                 </div>
