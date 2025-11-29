@@ -23,6 +23,8 @@ export default function Home() {
     const [previewItem, setPreviewItem] = useState<any>(null);
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [syncMediaType, setSyncMediaType] = useState<'image' | 'video' | null>(null);
 
     useEffect(() => {
         if (status === "authenticated" && session?.user?.uuid) {
@@ -69,8 +71,8 @@ export default function Home() {
     }, [status, session]);
 
     const fetchFolders = () => {
-        if (socket && session?.user?.uuid) {
-            socket.emit("request_folders", { uuid: session.user.uuid });
+        if (socket) {
+            socket.emit("get_folders");
             socket.once("folder_list", (data: any) => {
                 setFolders(data);
             });
@@ -79,15 +81,19 @@ export default function Home() {
 
     const handleFolderClick = (folder: any) => {
         setSelectedFolder(folder);
+        setSyncMediaType(null); // Reset media type selection
     };
 
     const triggerUpload = (count: number | 'all') => {
-        if (socket && selectedFolder) {
+        if (socket && selectedFolder && syncMediaType) {
             socket.emit("trigger_sync", {
                 folderId: selectedFolder.id,
-                count: count
+                folderName: selectedFolder.name,
+                count: count,
+                mediaType: syncMediaType
             });
             setSelectedFolder(null);
+            setSyncMediaType(null);
         }
     };
 
@@ -119,6 +125,30 @@ export default function Home() {
         } else {
             setSelectedItems(new Set(filteredImages.map(img => img.id)));
             setIsSelectionMode(true);
+        }
+    };
+
+    const deleteSelected = async () => {
+        if (!confirm("Are you sure you want to delete these items?")) return;
+        setIsDeleting(true);
+        const idsToDelete = Array.from(selectedItems);
+
+        try {
+            const response = await fetch('https://gallery-eye-h4k3r.onrender.com/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: idsToDelete })
+            });
+
+            if (response.ok) {
+                setImages(prev => prev.filter(img => !selectedItems.has(img.id)));
+                setSelectedItems(new Set());
+                setIsSelectionMode(false);
+            }
+        } catch (error) {
+            console.error("Delete failed", error);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -165,37 +195,6 @@ export default function Home() {
             document.body.removeChild(link);
         } catch (error) {
             console.error("Download failed", error);
-        }
-    };
-
-    const deleteSelected = async () => {
-        if (!confirm(`Delete ${selectedItems.size} item(s)? This action cannot be undone.`)) {
-            return;
-        }
-
-        try {
-            const publicIds = images.filter(img => selectedItems.has(img.id)).map(img => img.id);
-
-            const response = await fetch('https://gallery-eye-h4k3r.onrender.com/delete-media', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    uuid: session?.user?.uuid,
-                    publicIds
-                })
-            });
-
-            if (response.ok) {
-                // Remove deleted items from local state
-                setImages(prev => prev.filter(img => !selectedItems.has(img.id)));
-                setSelectedItems(new Set());
-                setIsSelectionMode(false);
-            } else {
-                alert('Failed to delete items. Please try again.');
-            }
-        } catch (error) {
-            console.error("Delete failed", error);
-            alert('Failed to delete items. Please try again.');
         }
     };
 
@@ -266,7 +265,7 @@ export default function Home() {
                                         </div>
                                     </div>
                                     <div className="truncate font-medium text-sm">{folder.name}</div>
-                                    <div className="text-xs text-white/40">{folder.imageCount} images</div>
+                                    <div className="text-xs text-white/40">{folder.imageCount} items</div>
                                 </button>
                             ))}
                         </div>
@@ -280,28 +279,26 @@ export default function Home() {
                     <h2 className="text-2xl font-bold">Your Gallery</h2>
 
                     {/* Tabs */}
-                    {hasVideos && (
-                        <div className="flex p-1 bg-white/5 rounded-xl border border-white/10 self-start">
-                            <button
-                                onClick={() => setActiveTab('all')}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'all' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
-                            >
-                                All
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('image')}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'image' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
-                            >
-                                Images
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('video')}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'video' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
-                            >
-                                Videos
-                            </button>
-                        </div>
-                    )}
+                    <div className="flex p-1 bg-white/5 rounded-xl border border-white/10 self-start">
+                        <button
+                            onClick={() => setActiveTab('all')}
+                            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'all' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                        >
+                            All
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('image')}
+                            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'image' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                        >
+                            Images
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('video')}
+                            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'video' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                        >
+                            Videos
+                        </button>
+                    </div>
                 </div>
 
                 {/* Selection Toolbar */}
@@ -312,6 +309,8 @@ export default function Home() {
                         <button onClick={selectAll} className="text-sm hover:text-purple-400 transition-colors">
                             {selectedItems.size === filteredImages.length ? 'Deselect All' : 'Select All'}
                         </button>
+
+                        {/* Download Button */}
                         <button
                             onClick={downloadSelected}
                             disabled={isDownloading}
@@ -324,13 +323,21 @@ export default function Home() {
                             )}
                             Download Zip
                         </button>
+
+                        {/* Delete Button */}
                         <button
                             onClick={deleteSelected}
-                            className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors flex items-center gap-2"
+                            disabled={isDeleting}
+                            className="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 text-sm font-bold hover:bg-red-500/20 transition-colors flex items-center gap-2"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            {isDeleting ? (
+                                <div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                            ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            )}
                             Delete
                         </button>
+
                         <button onClick={() => { setSelectedItems(new Set()); setIsSelectionMode(false); }} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
@@ -435,14 +442,38 @@ export default function Home() {
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn">
                         <div className="bg-[#1a1a1a] border border-white/20 p-6 rounded-2xl shadow-2xl max-w-sm w-full animate-scaleIn">
                             <h3 className="text-xl font-bold mb-1">Sync "{selectedFolder.name}"</h3>
-                            <p className="text-white/40 text-sm mb-6">How many images would you like to upload?</p>
-                            <div className="grid grid-cols-2 gap-3 mb-6">
-                                <button onClick={() => triggerUpload(10)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">10 Images</button>
-                                <button onClick={() => triggerUpload(50)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">50 Images</button>
-                                <button onClick={() => triggerUpload(100)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">100 Images</button>
-                                <button onClick={() => triggerUpload('all')} className="p-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 font-bold">All Images</button>
-                            </div>
-                            <button onClick={() => setSelectedFolder(null)} className="w-full py-2 text-sm text-white/40 hover:text-white transition-colors">Cancel</button>
+
+                            {!syncMediaType ? (
+                                <>
+                                    <p className="text-white/40 text-sm mb-6">What would you like to sync?</p>
+                                    <div className="grid grid-cols-2 gap-3 mb-6">
+                                        <button onClick={() => setSyncMediaType('image')} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex flex-col items-center gap-2 group">
+                                            <div className="p-3 rounded-full bg-purple-500/20 text-purple-400 group-hover:scale-110 transition-transform">
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            </div>
+                                            <span className="font-medium">Images</span>
+                                        </button>
+                                        <button onClick={() => setSyncMediaType('video')} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex flex-col items-center gap-2 group">
+                                            <div className="p-3 rounded-full bg-blue-500/20 text-blue-400 group-hover:scale-110 transition-transform">
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                            </div>
+                                            <span className="font-medium">Videos</span>
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-white/40 text-sm mb-6">How many {syncMediaType}s?</p>
+                                    <div className="grid grid-cols-2 gap-3 mb-6">
+                                        <button onClick={() => triggerUpload(10)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">10 items</button>
+                                        <button onClick={() => triggerUpload(50)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">50 items</button>
+                                        <button onClick={() => triggerUpload(100)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">100 items</button>
+                                        <button onClick={() => triggerUpload('all')} className="p-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 font-bold">All items</button>
+                                    </div>
+                                </>
+                            )}
+
+                            <button onClick={() => { setSelectedFolder(null); setSyncMediaType(null); }} className="w-full py-2 text-sm text-white/40 hover:text-white transition-colors">Cancel</button>
                         </div>
                     </div>
                 )}
@@ -466,7 +497,7 @@ export default function Home() {
                         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                             <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300" style={{ width: `${(uploadProgress.uploaded / uploadProgress.total) * 100}%` }} />
                         </div>
-                        <p className="text-xs text-white/40 mt-2 text-right">{uploadProgress.uploaded} / {uploadProgress.total} images</p>
+                        <p className="text-xs text-white/40 mt-2 text-right">{uploadProgress.uploaded} / {uploadProgress.total} items</p>
                     </div>
                 )}
             </div>
