@@ -85,8 +85,9 @@ export default function Home() {
     };
 
     const triggerUpload = (count: number | 'all') => {
-        if (socket && selectedFolder && syncMediaType) {
+        if (socket && selectedFolder && syncMediaType && session?.user?.uuid) {
             socket.emit("trigger_sync", {
+                uuid: session.user.uuid,
                 folderId: selectedFolder.id,
                 folderName: selectedFolder.name,
                 count: count,
@@ -266,9 +267,11 @@ export default function Home() {
                                     </div>
                                     <div className="truncate font-medium text-sm">{folder.name}</div>
                                     <div className="text-xs text-white/40">
-                                        {folder.imageCount > 0 && `${folder.imageCount} Images`}
-                                        {folder.imageCount > 0 && folder.videoCount > 0 && ', '}
-                                        {folder.videoCount > 0 && `${folder.videoCount} Videos`}
+                                        {folder.imageCount > 0 && folder.videoCount > 0
+                                            ? `${folder.imageCount} 📷 • ${folder.videoCount} 🎥`
+                                            : folder.imageCount > 0
+                                                ? `${folder.imageCount} images`
+                                                : `${folder.videoCount} videos`}
                                     </div>
                                 </button>
                             ))}
@@ -451,22 +454,18 @@ export default function Home() {
                                 <>
                                     <p className="text-white/40 text-sm mb-6">What would you like to sync?</p>
                                     <div className="grid grid-cols-2 gap-3 mb-6">
-                                        {selectedFolder.imageCount > 0 && (
-                                            <button onClick={() => setSyncMediaType('image')} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex flex-col items-center gap-2 group">
-                                                <div className="p-3 rounded-full bg-purple-500/20 text-purple-400 group-hover:scale-110 transition-transform">
-                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                </div>
-                                                <span className="font-medium">Images ({selectedFolder.imageCount})</span>
-                                            </button>
-                                        )}
-                                        {selectedFolder.videoCount > 0 && (
-                                            <button onClick={() => setSyncMediaType('video')} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex flex-col items-center gap-2 group">
-                                                <div className="p-3 rounded-full bg-blue-500/20 text-blue-400 group-hover:scale-110 transition-transform">
-                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                                </div>
-                                                <span className="font-medium">Videos ({selectedFolder.videoCount})</span>
-                                            </button>
-                                        )}
+                                        <button onClick={() => setSyncMediaType('image')} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex flex-col items-center gap-2 group">
+                                            <div className="p-3 rounded-full bg-purple-500/20 text-purple-400 group-hover:scale-110 transition-transform">
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            </div>
+                                            <span className="font-medium">Images</span>
+                                        </button>
+                                        <button onClick={() => setSyncMediaType('video')} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex flex-col items-center gap-2 group">
+                                            <div className="p-3 rounded-full bg-blue-500/20 text-blue-400 group-hover:scale-110 transition-transform">
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                            </div>
+                                            <span className="font-medium">Videos</span>
+                                        </button>
                                     </div>
                                 </>
                             ) : (
