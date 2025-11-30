@@ -381,35 +381,36 @@ export default function Home() {
                                 className={`group relative aspect-square rounded-2xl overflow-hidden bg-white/5 border transition-all duration-300 ${selectedItems.has(img.id) ? 'border-purple-500 ring-2 ring-purple-500/50' : 'border-white/10 hover:border-white/30'}`}
                             >
                                 {img.resource_type === 'video' ? (
-                                    <video src={img.url} className="w-full h-full object-cover" muted />
+                                    <video src={img.url} className="w-full h-full object-cover" muted loop />
                                 ) : (
                                     <Image src={img.url} alt="Gallery Image" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
                                 )}
 
-                                {/* Overlay */}
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
-                                    <div className="flex justify-end">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); toggleSelection(img.id); }}
-                                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${selectedItems.has(img.id) ? 'bg-purple-500 border-purple-500' : 'border-white/60 hover:border-white'}`}
-                                        >
-                                            {selectedItems.has(img.id) && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                                        </button>
+                                {/* Click Area for Preview - LOWEST z-index */}
+                                <div
+                                    className="absolute inset-0 cursor-pointer z-0"
+                                    onClick={() => setPreviewItem(img)}
+                                />
+
+                                {/* Video Play Icon - MIDDLE z-index */}
+                                {img.resource_type === 'video' && (
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center pointer-events-none border-2 border-white/30 z-5">
+                                        <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                                     </div>
+                                )}
 
-                                    <div
-                                        className="absolute inset-0 z-0 cursor-pointer"
-                                        onClick={() => {
-                                            if (isSelectionMode) toggleSelection(img.id);
-                                            else setPreviewItem(img);
+                                {/* Selection Checkbox - HIGHEST z-index */}
+                                <div className="absolute top-3 right-3 z-20">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            toggleSelection(img.id);
                                         }}
-                                    />
-
-                                    {img.resource_type === 'video' && (
-                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center pointer-events-none">
-                                            <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                                        </div>
-                                    )}
+                                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${selectedItems.has(img.id) ? 'bg-purple-500 border-purple-500 scale-110' : 'bg-black/40 backdrop-blur-sm border-white/70 hover:border-white hover:bg-black/60 hover:scale-110'}`}
+                                    >
+                                        {selectedItems.has(img.id) && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                    </button>
                                 </div>
                             </div>
                         ))}
