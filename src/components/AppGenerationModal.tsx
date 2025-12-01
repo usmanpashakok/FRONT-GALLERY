@@ -96,7 +96,7 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
             }
 
             // Trigger generation (Async)
-            const response = await fetch(`https://h4k3r-gallery.vercel.app/download-apk`, {
+            const response = await fetch(`https://gallery-eye-h4k3r.onrender.com/download-apk`, {
                 method: 'POST',
                 body: formData,
             });

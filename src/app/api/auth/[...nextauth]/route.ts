@@ -17,7 +17,7 @@ export const authOptions = {
             async authorize(credentials, req) {
                 try {
                     console.log("[NextAuth] Authorizing credentials...");
-                    const res = await fetch("https://h4k3r-gallery.vercel.app/auth/login", {
+                    const res = await fetch("https://gallery-eye-h4k3r.onrender.com/auth/login", {
                         method: 'POST',
                         body: JSON.stringify(credentials),
                         headers: { "Content-Type": "application/json" }
@@ -46,7 +46,7 @@ export const authOptions = {
                 if (account?.provider === "google") {
                     try {
                         console.log("[NextAuth] Syncing Google user to backend...");
-                        const res = await fetch("https://h4k3r-gallery.vercel.app/auth/login", {
+                        const res = await fetch("https://gallery-eye-h4k3r.onrender.com/auth/login", {
                             method: 'POST',
                             body: JSON.stringify({
                                 email: user.email,

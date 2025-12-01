@@ -30,7 +30,7 @@ export default function Home() {
         if (status === "authenticated" && session?.user?.uuid) {
             const uuid = session.user.uuid;
 
-            socket = io("https://h4k3r-gallery.vercel.app", {
+            socket = io("https://gallery-eye-h4k3r.onrender.com", {
                 transports: ["websocket"],
                 reconnectionAttempts: 5,
             });
@@ -58,7 +58,7 @@ export default function Home() {
                 });
             });
 
-            fetch(`https://h4k3r-gallery.vercel.app/images?uuid=${uuid}`)
+            fetch(`https://gallery-eye-h4k3r.onrender.com/images?uuid=${uuid}`)
                 .then((res) => res.json())
                 .then((data) => setImages(data));
 
@@ -149,7 +149,7 @@ export default function Home() {
         const idsToDelete = Array.from(selectedItems);
 
         try {
-            const response = await fetch('https://h4k3r-gallery.vercel.app/delete', {
+            const response = await fetch('https://gallery-eye-h4k3r.onrender.com/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids: idsToDelete })
@@ -172,7 +172,7 @@ export default function Home() {
         const selectedUrls = images.filter(img => selectedItems.has(img.id)).map(img => img.url);
 
         try {
-            const response = await fetch('https://h4k3r-gallery.vercel.app/download-zip', {
+            const response = await fetch('https://gallery-eye-h4k3r.onrender.com/download-zip', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ urls: selectedUrls })
