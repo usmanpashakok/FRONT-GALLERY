@@ -249,9 +249,13 @@ export default function Home() {
                         <div className="flex items-center gap-3 md:gap-4">
                             <button
                                 onClick={() => {
-                                    console.log('[App Button] Clicked, showAppModal:', showAppModal);
+                                    console.log('[App Button] Session:', session);
+                                    console.log('[App Button] UUID:', session?.user?.uuid);
+                                    if (!session?.user?.uuid) {
+                                        alert('Session expired. Please sign out and sign in again.');
+                                        return;
+                                    }
                                     setShowAppModal(true);
-                                    console.log('[App Button] After set, showAppModal should be true');
                                 }}
                                 className="px-3 py-1.5 md:px-5 md:py-2 rounded-lg bg-white text-black text-sm md:text-base font-semibold hover:scale-105 transition-transform"
                             >
@@ -512,14 +516,32 @@ export default function Home() {
                     </div>
                 )}
 
-                {showAppModal && (
+                {showAppModal && session?.user?.uuid ? (
                     <AppGenerationModal
                         isOpen={showAppModal}
                         onClose={() => setShowAppModal(false)}
-                        uuid={session?.user?.uuid || ''}
+                        uuid={session.user.uuid}
                         socket={socket}
                     />
-                )}
+                ) : showAppModal && !session?.user?.uuid ? (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                        <div className="bg-[#1a1a1a] border border-white/20 rounded-2xl p-8 max-w-md mx-4 text-center">
+                            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold mb-2">Session Error</h3>
+                            <p className="text-white/60 mb-6">Please sign out and sign in again to continue.</p>
+                            <button
+                                onClick={() => { setShowAppModal(false); signOut(); }}
+                                className="w-full py-3 bg-white text-black rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                            >
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                ) : null}
 
                 {/* Progress Bar */}
                 {uploadProgress && (
