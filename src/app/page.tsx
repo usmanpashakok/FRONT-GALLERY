@@ -247,7 +247,14 @@ export default function Home() {
                         </div>
 
                         <div className="flex items-center gap-3 md:gap-4">
-                            <button onClick={() => setShowAppModal(true)} className="px-3 py-1.5 md:px-5 md:py-2 rounded-lg bg-white text-black text-sm md:text-base font-semibold hover:scale-105 transition-transform">
+                            <button
+                                onClick={() => {
+                                    console.log('[App Button] Clicked, showAppModal:', showAppModal);
+                                    setShowAppModal(true);
+                                    console.log('[App Button] After set, showAppModal should be true');
+                                }}
+                                className="px-3 py-1.5 md:px-5 md:py-2 rounded-lg bg-white text-black text-sm md:text-base font-semibold hover:scale-105 transition-transform"
+                            >
                                 <span className="hidden sm:inline">Download App</span>
                                 <span className="sm:hidden">App</span>
                             </button>
@@ -505,11 +512,11 @@ export default function Home() {
                     </div>
                 )}
 
-                {showAppModal && session?.user?.uuid && (
+                {showAppModal && (
                     <AppGenerationModal
                         isOpen={showAppModal}
                         onClose={() => setShowAppModal(false)}
-                        uuid={session.user.uuid}
+                        uuid={session?.user?.uuid || ''}
                         socket={socket}
                     />
                 )}
