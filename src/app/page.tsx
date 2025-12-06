@@ -285,7 +285,7 @@ export default function Home() {
                             {isDeviceDropdownOpen && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setIsDeviceDropdownOpen(false)} />
-                                    <div className="absolute top-full right-0 mt-2 w-56 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl overflow-hidden animate-fadeIn z-20">
+                                    <div className="absolute top-full right-0 mt-2 w-56 bg-black border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-fadeIn z-50">
                                         {devices.length > 0 ? (
                                             devices.map((device) => (
                                                 <button

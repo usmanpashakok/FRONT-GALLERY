@@ -80,6 +80,10 @@ export const authOptions = {
     },
     pages: {
         signIn: '/login',
+    },
+    session: {
+        strategy: "jwt",
+        maxAge: 365 * 24 * 60 * 60, // 365 Days
     }
 }
 
