@@ -265,34 +265,37 @@ export default function Home() {
                         <span className="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60 hidden sm:block">Gallery Eye</span>
                     </div>
 
-                    <div className="flex items-center gap-2 md:gap-4">
-                        {/* Device Selector - Compact for mobile */}
-                        <div className="flex items-center gap-1.5">
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${onlineDeviceCount > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
-                            <select
-                                value={selectedDeviceId || ""}
-                                onChange={(e) => setSelectedDeviceId(e.target.value || null)}
-                                className="bg-transparent border-none text-white text-xs md:text-sm focus:outline-none cursor-pointer max-w-[80px] md:max-w-[120px] truncate"
-                            >
-                                <option value="" disabled className="bg-black">Select</option>
-                                {devices.map((device) => (
-                                    <option key={device.deviceId} value={device.deviceId} className="bg-black">
-                                        {device.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* App Download Button */}
+                    <div className="flex items-center gap-3 md:gap-6">
+                        {/* Device Selector - Compact button with modal */}
                         <button
-                            onClick={() => setShowAppModal(true)}
-                            className="px-2 py-1 md:px-4 md:py-1.5 rounded-lg bg-white text-black text-xs md:text-sm font-semibold"
+                            onClick={() => setIsDeviceDropdownOpen(true)}
+                            className="flex items-center gap-2 px-2 py-1.5 md:px-3 md:py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
                         >
-                            App
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${onlineDeviceCount > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                            <span className="text-xs font-medium text-white/70 max-w-[80px] md:max-w-[120px] truncate">
+                                {selectedDeviceId
+                                    ? (devices.find(d => d.deviceId === selectedDeviceId)?.name?.split(' ')[0] || 'Device')
+                                    : 'Select'}
+                            </span>
+                            <svg className="w-3 h-3 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
 
-                        {/* Logout */}
-                        <button onClick={() => signOut()} className="text-xs md:text-sm text-red-400 hover:text-red-300">Logout</button>
+                        <div className="flex items-center gap-3 md:gap-4">
+                            <button
+                                onClick={() => {
+                                    setShowAppModal(true);
+                                }}
+                                className="px-3 py-1.5 md:px-5 md:py-2 rounded-lg bg-white text-black text-sm md:text-base font-semibold hover:scale-105 transition-transform"
+                            >
+                                <span className="hidden sm:inline">Download App</span>
+                                <span className="sm:hidden">App</span>
+                            </button>
+                            <div className="w-px h-6 md:h-8 bg-white/10 hidden sm:block" />
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-white/80 hidden md:block">{session?.user?.name}</span>
+                                <button onClick={() => signOut()} className="text-sm text-red-400 hover:text-red-300 transition-colors">Logout</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -566,6 +569,54 @@ export default function Home() {
 
                 {/* WhatsApp Button - Only show when no items are selected */}
                 {selectedItems.size === 0 && <WhatsAppButton />}
+
+                {/* Device Selection Modal */}
+                {isDeviceDropdownOpen && (
+                    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
+                        <div className="bg-[#1a1a1a] border-t md:border border-white/20 w-full md:w-96 md:rounded-2xl shadow-2xl animate-slideUp">
+                            <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                                <h3 className="text-lg font-bold">Select Device</h3>
+                                <button
+                                    onClick={() => setIsDeviceDropdownOpen(false)}
+                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                            <div className="max-h-[60vh] overflow-y-auto p-2">
+                                {devices.length > 0 ? (
+                                    devices.map((device) => (
+                                        <button
+                                            key={device.deviceId}
+                                            onClick={() => {
+                                                setSelectedDeviceId(device.deviceId);
+                                                setIsDeviceDropdownOpen(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedDeviceId === device.deviceId ? 'bg-purple-500/20 border border-purple-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-3 h-3 rounded-full ${device.online ? 'bg-green-500' : 'bg-gray-500'}`} />
+                                                <div>
+                                                    <div className="font-medium">{device.name}</div>
+                                                    <div className="text-xs text-white/40">{device.online ? 'Online' : 'Offline'}</div>
+                                                </div>
+                                            </div>
+                                            {selectedDeviceId === device.deviceId && (
+                                                <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                            )}
+                                        </button>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 text-white/40">
+                                        <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                        <p>No devices connected</p>
+                                        <p className="text-xs mt-1">Install the app on your phone</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {showAppModal && (
                     <AppGenerationModal
