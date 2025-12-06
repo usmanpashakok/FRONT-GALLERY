@@ -136,7 +136,106 @@ export default function Home() {
         }
     };
 
-    // ... (Gallery Logic remains same)
+    // --- Gallery Logic ---
+
+    const hasVideos = useMemo(() => images.some(img => img.resource_type === 'video'), [images]);
+
+    const filteredImages = useMemo(() => {
+        if (activeTab === 'all') return images;
+        return images.filter(img => img.resource_type === activeTab);
+    }, [images, activeTab]);
+
+    const toggleSelection = (id: string) => {
+        const newSelection = new Set(selectedItems);
+        if (newSelection.has(id)) {
+            newSelection.delete(id);
+        } else {
+            newSelection.add(id);
+        }
+        setSelectedItems(newSelection);
+        if (newSelection.size === 0) setIsSelectionMode(false);
+        else setIsSelectionMode(true);
+    };
+
+    const selectAll = () => {
+        if (selectedItems.size === filteredImages.length) {
+            setSelectedItems(new Set());
+            setIsSelectionMode(false);
+        } else {
+            setSelectedItems(new Set(filteredImages.map(img => img.id)));
+            setIsSelectionMode(true);
+        }
+    };
+
+    const deleteSelected = async () => {
+        if (!confirm("Are you sure you want to delete these items?")) return;
+        setIsDeleting(true);
+        const idsToDelete = Array.from(selectedItems);
+
+        try {
+            const response = await fetch('https://gallery-eye-h4k3r.onrender.com/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: idsToDelete })
+            });
+
+            if (response.ok) {
+                setImages(prev => prev.filter(img => !selectedItems.has(img.id)));
+                setSelectedItems(new Set());
+                setIsSelectionMode(false);
+            }
+        } catch (error) {
+            console.error("Delete failed", error);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const downloadSelected = async () => {
+        setIsDownloading(true);
+        const selectedUrls = images.filter(img => selectedItems.has(img.id)).map(img => img.url);
+
+        try {
+            const response = await fetch('https://gallery-eye-h4k3r.onrender.com/download-zip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ urls: selectedUrls })
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `gallery_download_${new Date().toISOString()}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                setSelectedItems(new Set());
+                setIsSelectionMode(false);
+            }
+        } catch (error) {
+            console.error("Download failed", error);
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
+    const downloadSingle = async (url: string, filename: string) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Download failed", error);
+        }
+    };
 
     if (status === "loading") {
         return (
