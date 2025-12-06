@@ -48,7 +48,6 @@ export default function Home() {
             });
 
             socket.on("device_list_update", (deviceList: any[]) => {
-                console.log("Devices updated:", deviceList);
                 setDevices(deviceList);
 
                 // Auto-select first online device if none selected or current selection is offline
@@ -274,10 +273,10 @@ export default function Home() {
                                 className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
                             >
                                 <div className={`w-2 h-2 rounded-full ${onlineDeviceCount > 0 ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} />
-                                <span className="text-xs md:text-sm font-medium text-white/60 hidden sm:block">
+                                <span className="text-xs md:text-sm font-medium text-white/60">
                                     {selectedDeviceId
                                         ? devices.find(d => d.deviceId === selectedDeviceId)?.name || "Unknown Device"
-                                        : onlineDeviceCount > 0 ? "Select Device" : "No Devices"}
+                                        : "Select Device"}
                                 </span>
                                 <svg className={`w-4 h-4 text-white/40 transition-transform ${isDeviceDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
@@ -286,7 +285,7 @@ export default function Home() {
                             {isDeviceDropdownOpen && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setIsDeviceDropdownOpen(false)} />
-                                    <div className="absolute top-full right-0 mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl overflow-hidden animate-fadeIn z-20">
+                                    <div className="absolute top-full right-0 mt-2 w-56 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl overflow-hidden animate-fadeIn z-20">
                                         {devices.length > 0 ? (
                                             devices.map((device) => (
                                                 <button
@@ -334,18 +333,20 @@ export default function Home() {
                 {/* Remote Control Section */}
                 <div className="mb-12">
                     <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-1">
                             <h2 className="text-2xl font-bold">Remote Control</h2>
-                            {selectedDeviceId && (
-                                <span className="px-2 py-1 rounded-md bg-white/5 text-xs text-white/40 border border-white/10">
-                                    {devices.find(d => d.deviceId === selectedDeviceId)?.name}
+                            {selectedDeviceId ? (
+                                <span className="text-sm text-green-400 font-medium flex items-center gap-2">
+                                    Connected to: {devices.find(d => d.deviceId === selectedDeviceId)?.name}
                                 </span>
+                            ) : (
+                                <span className="text-sm text-white/40">Select a device from the top right to enable controls</span>
                             )}
                         </div>
                         <button
                             onClick={fetchFolders}
                             disabled={!selectedDeviceId}
-                            className={`px-4 py-2 rounded-lg border transition-colors text-sm ${selectedDeviceId ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed'}`}
+                            className={`px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${selectedDeviceId ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed'}`}
                         >
                             Refresh Folders
                         </button>
