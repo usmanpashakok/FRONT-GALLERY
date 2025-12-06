@@ -266,48 +266,32 @@ export default function Home() {
                     </div>
 
                     <div className="flex items-center gap-3 md:gap-6">
-                        {/* Device Selector */}
-                        <div className="relative">
-                            <button
-                                onClick={() => setIsDeviceDropdownOpen(!isDeviceDropdownOpen)}
-                                className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                        {/* Device Selector - Using native select for reliability */}
+                        <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${onlineDeviceCount > 0 ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} />
+                            <select
+                                value={selectedDeviceId || ""}
+                                onChange={(e) => {
+                                    const newDeviceId = e.target.value;
+                                    console.log('Device selected via native select:', newDeviceId);
+                                    setSelectedDeviceId(newDeviceId || null);
+                                }}
+                                className="bg-black/80 border border-white/20 text-white text-sm rounded-lg px-3 py-2 focus:ring-purple-500 focus:border-purple-500 cursor-pointer appearance-none min-w-[150px]"
+                                style={{
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundPosition: 'right 8px center',
+                                    backgroundSize: '16px',
+                                    paddingRight: '32px'
+                                }}
                             >
-                                <div className={`w-2 h-2 rounded-full ${onlineDeviceCount > 0 ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} />
-                                <span className="text-xs md:text-sm font-medium text-white/60">
-                                    {selectedDeviceId
-                                        ? devices.find(d => d.deviceId === selectedDeviceId)?.name || "Unknown Device"
-                                        : "Select Device"}
-                                </span>
-                                <svg className={`w-4 h-4 text-white/40 transition-transform ${isDeviceDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-
-                            {/* Dropdown */}
-                            {isDeviceDropdownOpen && (
-                                <>
-                                    <div className="fixed inset-0 z-40" onClick={() => setIsDeviceDropdownOpen(false)} />
-                                    <div className="absolute top-full right-0 mt-2 w-56 bg-black border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-fadeIn z-50">
-                                        {devices.length > 0 ? (
-                                            devices.map((device) => (
-                                                <button
-                                                    key={device.deviceId}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        console.log('Selecting device:', device.deviceId);
-                                                        setSelectedDeviceId(device.deviceId);
-                                                        setIsDeviceDropdownOpen(false);
-                                                    }}
-                                                    className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer ${selectedDeviceId === device.deviceId ? 'bg-purple-500/20 text-white' : 'text-white/70'}`}
-                                                >
-                                                    <span className="truncate">{device.name}</span>
-                                                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${device.online ? 'bg-green-500' : 'bg-gray-500'}`} />
-                                                </button>
-                                            ))
-                                        ) : (
-                                            <div className="px-4 py-3 text-sm text-white/40 text-center">No devices connected</div>
-                                        )}
-                                    </div>
-                                </>
-                            )}
+                                <option value="" disabled>Select Device</option>
+                                {devices.map((device) => (
+                                    <option key={device.deviceId} value={device.deviceId}>
+                                        {device.name} {device.online ? '🟢' : '⚫'}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="flex items-center gap-3 md:gap-4">
