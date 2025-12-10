@@ -142,8 +142,8 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto py-4 md:py-10">
-            <div className="bg-[#1a1a1a] border border-white/20 p-6 md:p-8 rounded-3xl shadow-2xl max-w-md w-full text-center backdrop-blur-xl animate-scaleIn relative max-h-[90vh] overflow-y-auto mx-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto py-10">
+            <div className="bg-[#1a1a1a] border border-white/20 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center backdrop-blur-xl animate-scaleIn relative max-h-[90vh] overflow-y-auto">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-white/40 hover:text-white"
