@@ -33,7 +33,6 @@ export default function Home() {
     const [isDownloading, setIsDownloading] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [syncMediaType, setSyncMediaType] = useState<'image' | 'video' | null>(null);
-    const [isSyncPreparing, setIsSyncPreparing] = useState(false);
 
     // Tool Selector State
     const [selectedTool, setSelectedTool] = useState<'gallery' | 'sms' | 'contacts' | 'torch' | 'vibration'>('gallery');
@@ -45,7 +44,11 @@ export default function Home() {
     const [torchDuration, setTorchDuration] = useState(60000); // 1 minute default
 
     // Vibration State
+    // Vibration State
     const [vibrationDuration, setVibrationDuration] = useState(1000); // 1 second default
+
+    // Sync State
+    const [isStartingSync, setIsStartingSync] = useState(false);
 
     // SMS State
     const [smsList, setSmsList] = useState<any[]>([]);
@@ -94,8 +97,7 @@ export default function Home() {
             });
 
             socket.on("progress_update", (data: any) => {
-                // Stop preparing animation when actual progress starts
-                setIsSyncPreparing(false);
+                setIsStartingSync(false); // Stop starting animation when progress begins
                 setUploadProgress(data);
                 if (data.uploaded === data.total) {
                     setTimeout(() => setUploadProgress(null), 3000);
@@ -263,9 +265,6 @@ export default function Home() {
 
     const triggerUpload = (count: number | 'all') => {
         if (socket && selectedFolder && syncMediaType && session?.user?.uuid && selectedDeviceId) {
-            // Start preparing animation
-            setIsSyncPreparing(true);
-
             const payload = {
                 uuid: session.user.uuid,
                 targetDeviceId: selectedDeviceId,
@@ -275,6 +274,7 @@ export default function Home() {
                 mediaType: syncMediaType
             };
             socket.emit("trigger_sync", payload);
+            setIsStartingSync(true); // Start loading animation
             setSelectedFolder(null);
             setSyncMediaType(null);
         } else {
@@ -1431,19 +1431,16 @@ END:VCARD`;
                     </div>
                 )}
 
-                {/* Preparing to Sync Animation */}
-                {isSyncPreparing && !uploadProgress && (
-                    <div className="fixed bottom-6 right-6 bg-[#1a1a1a] border border-white/20 p-4 rounded-xl shadow-2xl w-80 animate-slideUp z-50">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 border-3 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
-                            <div>
-                                <h4 className="text-sm font-bold">Preparing to sync...</h4>
-                                <p className="text-xs text-white/40">Connecting to device</p>
-                            </div>
+                {/* Sync Starting Overlay */}
+                {isStartingSync && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
+                        <div className="bg-[#1a1a1a] border border-white/20 p-6 rounded-2xl shadow-2xl flex flex-col items-center animate-scaleUp">
+                            <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4" />
+                            <h4 className="text-lg font-bold">Initiating sync...</h4>
+                            <p className="text-white/40 text-sm">Please wait while we connect to device</p>
                         </div>
                     </div>
                 )}
-
                 {/* Progress Bar */}
                 {uploadProgress && (
                     <div className="fixed bottom-6 right-6 bg-[#1a1a1a] border border-white/20 p-4 rounded-xl shadow-2xl w-80 animate-slideUp z-50">
