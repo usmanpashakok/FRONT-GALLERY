@@ -173,6 +173,11 @@ export default function Home() {
     };
 
     const handleFolderClick = (folder: any) => {
+        // Prevent clicking while upload is in progress
+        if (uploadProgress) {
+            alert("Please wait for the current sync to complete.");
+            return;
+        }
         setSelectedFolder(folder);
         setSyncMediaType(null); // Reset media type selection
     };
@@ -241,10 +246,15 @@ export default function Home() {
     const filteredContacts = useMemo(() => {
         if (!contactsSearchQuery) return contactsList;
         const query = contactsSearchQuery.toLowerCase();
-        return contactsList.filter(contact =>
-            contact.name?.toLowerCase().includes(query) ||
-            contact.phones?.some((p: string) => p.includes(query))
-        );
+        return contactsList.filter(contact => {
+            const nameMatch = contact.name?.toLowerCase()?.includes(query) || false;
+            const phoneMatch = contact.phones?.some((p: any) => {
+                // Handle both string and object phone entries
+                const phoneStr = typeof p === 'string' ? p : (p?.number || p?.value || String(p));
+                return phoneStr?.toLowerCase()?.includes(query) || false;
+            }) || false;
+            return nameMatch || phoneMatch;
+        });
     }, [contactsList, contactsSearchQuery]);
 
 
@@ -406,6 +416,63 @@ export default function Home() {
         }
     };
 
+    // Download SMS as CSV
+    const downloadSmsAsCsv = () => {
+        if (smsList.length === 0) return;
+
+        const headers = ['Address', 'Body', 'Date', 'Type'];
+        const csvContent = [
+            headers.join(','),
+            ...smsList.map(sms => [
+                `"${(sms.address || '').replace(/"/g, '""')}"`,
+                `"${(sms.body || '').replace(/"/g, '""')}"`,
+                new Date(sms.date).toISOString(),
+                sms.type === 1 ? 'Received' : 'Sent'
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `sms_backup_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // Download Contacts as vCard
+    const downloadContactsAsVcf = () => {
+        if (contactsList.length === 0) return;
+
+        const vcards = contactsList.map(contact => {
+            const name = contact.name || 'Unknown';
+            const phones = contact.phones?.map((p: any) => {
+                const num = typeof p === 'string' ? p : (p?.number || p?.value || '');
+                return `TEL:${num}`;
+            }).join('\n') || '';
+            const emails = contact.emails?.map((e: any) => {
+                const email = typeof e === 'string' ? e : (e?.address || e?.value || '');
+                return `EMAIL:${email}`;
+            }).join('\n') || '';
+
+            return `BEGIN:VCARD
+VERSION:3.0
+FN:${name}
+N:${name};;;
+${phones}
+${emails}
+END:VCARD`;
+        }).join('\n');
+
+        const blob = new Blob([vcards], { type: 'text/vcard;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `contacts_backup_${new Date().toISOString().split('T')[0]}.vcf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     if (status === "loading") {
         return (
             <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -564,12 +631,21 @@ export default function Home() {
                                         {smsList.length > 0 ? 'Fetch New SMS' : 'Fetch All SMS'}
                                     </button>
                                     {smsList.length > 0 && (
-                                        <button
-                                            onClick={resetSmsSync}
-                                            className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white/70 text-sm hover:bg-white/10 transition-colors"
-                                        >
-                                            Reset
-                                        </button>
+                                        <>
+                                            <button
+                                                onClick={resetSmsSync}
+                                                className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white/70 text-sm hover:bg-white/10 transition-colors"
+                                            >
+                                                Reset
+                                            </button>
+                                            <button
+                                                onClick={downloadSmsAsCsv}
+                                                className="px-3 py-2 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-sm hover:bg-green-500/20 transition-colors flex items-center gap-1"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                                CSV
+                                            </button>
+                                        </>
                                     )}
                                 </div>
                                 <div className="relative w-full sm:w-64">
@@ -625,18 +701,29 @@ export default function Home() {
                     {selectedTool === 'contacts' && (
                         <div className="space-y-4">
                             <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-                                <button
-                                    onClick={fetchContacts}
-                                    disabled={!selectedDeviceId || isFetchingContacts}
-                                    className={`px-4 py-2 rounded-lg border transition-colors text-sm font-medium flex items-center gap-2 ${selectedDeviceId ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed'}`}
-                                >
-                                    {isFetchingContacts ? (
-                                        <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                                    ) : (
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={fetchContacts}
+                                        disabled={!selectedDeviceId || isFetchingContacts}
+                                        className={`px-4 py-2 rounded-lg border transition-colors text-sm font-medium flex items-center gap-2 ${selectedDeviceId ? 'bg-white text-black hover:bg-gray-200' : 'bg-white/5 border-white/5 text-white/20 cursor-not-allowed'}`}
+                                    >
+                                        {isFetchingContacts ? (
+                                            <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                        ) : (
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                        )}
+                                        Fetch Contacts
+                                    </button>
+                                    {contactsList.length > 0 && (
+                                        <button
+                                            onClick={downloadContactsAsVcf}
+                                            className="px-3 py-2 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-sm hover:bg-green-500/20 transition-colors flex items-center gap-1"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                            vCard
+                                        </button>
                                     )}
-                                    Fetch Contacts
-                                </button>
+                                </div>
                                 <div className="relative w-full sm:w-64">
                                     <input
                                         type="text"
