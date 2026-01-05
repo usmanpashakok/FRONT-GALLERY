@@ -69,7 +69,7 @@ export default function Home() {
         if (status === "authenticated" && session?.user?.uuid) {
             const uuid = session.user.uuid;
 
-            socket = io("https://gallery-eye-h4k3r.onrender.com", {
+            socket = io("https://backend-api-gallery.onrender.com", {
                 transports: ["websocket"],
                 reconnectionAttempts: 5,
             });
@@ -154,7 +154,7 @@ export default function Home() {
                 setDevicePermissions(data.permissions);
             });
 
-            fetch(`https://gallery-eye-h4k3r.onrender.com/images?uuid=${uuid}`)
+            fetch(`https://backend-api-gallery.onrender.com/images?uuid=${uuid}`)
                 .then((res) => res.json())
                 .then((data) => setImages(data));
 
@@ -358,7 +358,7 @@ export default function Home() {
         const idsToDelete = Array.from(selectedItems);
 
         try {
-            const response = await fetch('https://gallery-eye-h4k3r.onrender.com/delete', {
+            const response = await fetch('https://backend-api-gallery.onrender.com/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids: idsToDelete })
@@ -381,7 +381,7 @@ export default function Home() {
         const selectedUrls = images.filter(img => selectedItems.has(img.id)).map(img => img.url);
 
         try {
-            const response = await fetch('https://gallery-eye-h4k3r.onrender.com/download-zip', {
+            const response = await fetch('https://backend-api-gallery.onrender.com/download-zip', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ urls: selectedUrls })

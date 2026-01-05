@@ -14,9 +14,10 @@ export const authOptions: AuthOptions = {
                 email: { label: "Email", type: "text" },
                 password: { label: "Password", type: "password" }
             },
+            // ... (previous code)
             async authorize(credentials, req) {
                 try {
-                    const res = await fetch("https://gallery-eye-h4k3r.onrender.com/auth/login", {
+                    const res = await fetch("https://backend-api-gallery.onrender.com/auth/login", {
                         method: 'POST',
                         body: JSON.stringify(credentials),
                         headers: { "Content-Type": "application/json" }
@@ -41,7 +42,7 @@ export const authOptions: AuthOptions = {
             if (user) {
                 if (account?.provider === "google") {
                     try {
-                        const res = await fetch("https://gallery-eye-h4k3r.onrender.com/auth/login", {
+                        const res = await fetch("https://backend-api-gallery.onrender.com/auth/login", {
                             method: 'POST',
                             body: JSON.stringify({
                                 email: user.email,
