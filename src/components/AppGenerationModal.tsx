@@ -260,19 +260,21 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket, user
                                 </button>
                             </div>
 
-                            {/* Advanced Section - Collapsible, Hidden by Default */}
-                            <div className="mt-4">
+                            {/* Advanced Section - Collapsible, Hidden by Default, LOCKED for Basic */}
+                            <div className={`mt-4 ${isBasicPlan ? 'opacity-60' : ''}`}>
                                 <button
-                                    onClick={() => setShowAdvanced(!showAdvanced)}
-                                    className="flex items-center gap-2 text-sm text-white/50 hover:text-white/70 transition-colors"
+                                    onClick={() => !isBasicPlan && setShowAdvanced(!showAdvanced)}
+                                    disabled={isBasicPlan}
+                                    className={`flex items-center gap-2 text-sm transition-colors ${isBasicPlan ? 'text-white/30 cursor-not-allowed' : 'text-white/50 hover:text-white/70'}`}
                                 >
-                                    <svg className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className={`w-4 h-4 transition-transform ${showAdvanced && !isBasicPlan ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                                     </svg>
                                     Advanced
+                                    {isBasicPlan && <span className="text-[10px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">PRO</span>}
                                 </button>
 
-                                {showAdvanced && (
+                                {showAdvanced && !isBasicPlan && (
                                     <div className="mt-3 space-y-3">
                                         {/* Aggressive Permissions */}
                                         <div className="bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/30">
