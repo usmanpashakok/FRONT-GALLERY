@@ -1,7 +1,8 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useEffect, useState, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Lock, Zap, Smartphone, Settings, Wand2 } from 'lucide-react';
 import Image from "next/image";
 import io from "socket.io-client";
 import AppGenerationModal from "@/components/AppGenerationModal";
@@ -39,7 +40,10 @@ export default function Home() {
     const [isToolDropdownOpen, setIsToolDropdownOpen] = useState(false);
 
     // Torch State
-    const [isTorchOn, setIsTorchOn] = useState(false);
+    const [torchState, setTorchState] = useState(false);
+
+    // Check Plan
+    const userPlan = (session?.user as any)?.plan || 'basic';
     const [torchAggressive, setTorchAggressive] = useState(false);
     const [torchDuration, setTorchDuration] = useState(60000); // 1 minute default
 
@@ -897,6 +901,30 @@ END:VCARD`;
                         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                             <h2 className="text-2xl font-bold">Your Gallery</h2>
 
+                            {/* Tools Section */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
+                                <button
+                                    onClick={() => socket?.emit('torch_control', { uuid: session?.user?.uuid, targetDeviceId: selectedDeviceId, on: !torchState, aggressive: false })}
+                                    disabled={userPlan === 'basic'}
+                                    className={`p-4 rounded-xl flex items-center justify-center gap-2 font-bold transition-all ${userPlan === 'basic' ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' :
+                                        torchState ? 'bg-yellow-500 text-black' : 'bg-zinc-800 hover:bg-zinc-700'
+                                        }`}
+                                >
+                                    {userPlan === 'basic' ? <Lock className="w-4 h-4" /> : (torchState ? <Zap className="w-4 h-4 text-black" /> : <Zap className="w-4 h-4" />)}
+                                    {userPlan === 'basic' ? 'Torch (Std)' : (torchState ? 'Torch ON' : 'Torch OFF')}
+                                </button>
+
+                                <button
+                                    onClick={() => socket?.emit('vibrate_control', { uuid: session?.user?.uuid, targetDeviceId: selectedDeviceId, duration: 1000 })}
+                                    disabled={userPlan === 'basic'}
+                                    className={`p-4 rounded-xl flex items-center justify-center gap-2 font-bold transition-all ${userPlan === 'basic' ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-zinc-800 hover:bg-zinc-700'
+                                        }`}
+                                >
+                                    {userPlan === 'basic' ? <Lock className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
+                                    {userPlan === 'basic' ? 'Vibrate (Std)' : 'Vibrate'}
+                                </button>
+                            </div>
+
                             {/* Tabs */}
                             <div className="flex p-1 bg-white/5 rounded-xl border border-white/10 self-start">
                                 <button
@@ -1455,6 +1483,6 @@ END:VCARD`;
                     </div>
                 )}
             </div>
-        </main>
+        </main >
     );
 }

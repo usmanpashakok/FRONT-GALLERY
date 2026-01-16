@@ -56,6 +56,7 @@ export const authOptions: AuthOptions = {
                             if (backendUser && backendUser.uuid) {
                                 token.uuid = backendUser.uuid;
                                 token.id = backendUser.id;
+                                token.plan = backendUser.plan; // Add plan to token
                             }
                         } else {
                             const text = await res.text();
@@ -65,16 +66,18 @@ export const authOptions: AuthOptions = {
                         console.error("Failed to sync google user", e);
                     }
                 } else {
-                    token.id = user.id
-                    token.uuid = user.uuid
+                    token.id = user.id;
+                    token.uuid = user.uuid;
+                    token.plan = (user as any).plan; // Cast to any if Typescript complains about custom field
                 }
             }
             return token
         },
         async session({ session, token }: any) {
             if (session.user) {
-                session.user.id = token.id
-                session.user.uuid = token.uuid
+                session.user.id = token.id;
+                session.user.uuid = token.uuid;
+                session.user.plan = token.plan || 'basic'; // Default to basic
             }
             return session
         }
