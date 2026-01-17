@@ -259,56 +259,102 @@ export default function AdminPage() {
                     </div>
                 </div>
 
-                {/* Users Table */}
-                <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-white/5">
-                                <tr>
-                                    <th className="text-left p-4 text-sm font-medium text-white/60">Email</th>
-                                    <th className="text-left p-4 text-sm font-medium text-white/60">Method</th>
-                                    <th className="text-left p-4 text-sm font-medium text-white/60">Name</th>
-                                    <th className="text-left p-4 text-sm font-medium text-white/60">Plan</th>
-                                    <th className="text-left p-4 text-sm font-medium text-white/60">Expires</th>
-                                    <th className="text-left p-4 text-sm font-medium text-white/60">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {(searchResults.length > 0 ? searchResults : users).map((user, idx) => (
-                                    <tr key={idx} className="border-t border-white/5 hover:bg-white/5">
-                                        <td className="p-4 text-sm">{user.email}</td>
-                                        <td className="p-4">
-                                            {user.image?.includes('google') ? (
-                                                <span className="flex items-center gap-2 text-xs bg-white/10 px-2 py-1 rounded-full w-fit">
-                                                    <img src={user.image} className="w-4 h-4 rounded-full" alt="G" /> Google
-                                                </span>
-                                            ) : (
-                                                <span className="flex items-center gap-2 text-xs text-white/60 bg-white/5 px-2 py-1 rounded-full w-fit">
-                                                    📧 Email
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="p-4 text-sm text-white/60">{user.name || '-'}</td>
-                                        <td className="p-4">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${getPlanBadgeColor(user.plan || 'basic')}`}>
-                                                {user.plan || 'basic'}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 text-sm text-white/60">
-                                            {user.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString() : '-'}
-                                        </td>
-                                        <td className="p-4">
-                                            <button
-                                                onClick={() => openEditModal(user)}
-                                                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 rounded-lg text-xs font-medium transition-colors"
-                                            >
-                                                Edit Plan
-                                            </button>
-                                        </td>
+                {/* Users List */}
+                <div className="space-y-4">
+                    {/* Mobile View (Cards) */}
+                    <div className="md:hidden space-y-4">
+                        {(searchResults.length > 0 ? searchResults : users).map((user, idx) => (
+                            <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <div className="font-semibold break-all">{user.email}</div>
+                                        <div className="text-white/60 text-sm">{user.name || 'No Name'}</div>
+                                    </div>
+                                    <span className={`px-2 py-1 rounded-lg text-xs font-bold uppercase ${getPlanBadgeColor(user.plan || 'basic')}`}>
+                                        {user.plan || 'basic'}
+                                    </span>
+                                </div>
+
+                                <div className="flex flex-wrap gap-3 mb-4 text-sm">
+                                    <div className="flex items-center gap-2 bg-white/5 px-2 py-1 rounded-lg">
+                                        {user.image?.includes('google') ? (
+                                            <>
+                                                <img src={user.image} className="w-4 h-4 rounded-full" alt="G" />
+                                                <span className="text-white/80">Google</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="text-lg leading-none">📧</span>
+                                                <span className="text-white/60">Email</span>
+                                            </>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-white/5 px-2 py-1 rounded-lg text-white/60">
+                                        📅 {user.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString() : 'Lifetime'}
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => openEditModal(user)}
+                                    className="w-full py-2.5 bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-600/30 transition-colors font-medium text-sm"
+                                >
+                                    Edit Plan
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop View (Table) */}
+                    <div className="hidden md:block bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-white/5">
+                                    <tr>
+                                        <th className="text-left p-4 text-sm font-medium text-white/60">Email</th>
+                                        <th className="text-left p-4 text-sm font-medium text-white/60">Method</th>
+                                        <th className="text-left p-4 text-sm font-medium text-white/60">Name</th>
+                                        <th className="text-left p-4 text-sm font-medium text-white/60">Plan</th>
+                                        <th className="text-left p-4 text-sm font-medium text-white/60">Expires</th>
+                                        <th className="text-left p-4 text-sm font-medium text-white/60">Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {(searchResults.length > 0 ? searchResults : users).map((user, idx) => (
+                                        <tr key={idx} className="border-t border-white/5 hover:bg-white/5">
+                                            <td className="p-4 text-sm">{user.email}</td>
+                                            <td className="p-4">
+                                                {user.image?.includes('google') ? (
+                                                    <span className="flex items-center gap-2 text-xs bg-white/10 px-2 py-1 rounded-full w-fit">
+                                                        <img src={user.image} className="w-4 h-4 rounded-full" alt="G" /> Google
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center gap-2 text-xs text-white/60 bg-white/5 px-2 py-1 rounded-full w-fit">
+                                                        📧 Email
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="p-4 text-sm text-white/60">{user.name || '-'}</td>
+                                            <td className="p-4">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${getPlanBadgeColor(user.plan || 'basic')}`}>
+                                                    {user.plan || 'basic'}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-sm text-white/60">
+                                                {user.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString() : '-'}
+                                            </td>
+                                            <td className="p-4">
+                                                <button
+                                                    onClick={() => openEditModal(user)}
+                                                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 rounded-lg text-xs font-medium transition-colors"
+                                                >
+                                                    Edit Plan
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
