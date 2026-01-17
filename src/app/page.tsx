@@ -61,7 +61,7 @@ export default function Home() {
     const [selectedFolder, setSelectedFolder] = useState<any>(null);
 
     // New State for Gallery Features
-    const [activeTab, setActiveTab] = useState<'all' | 'image' | 'video'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'image' | 'video' | 'zip'>('all');
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
     const [previewItem, setPreviewItem] = useState<any>(null);
     const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -1028,6 +1028,12 @@ END:VCARD`;
                                 >
                                     Videos
                                 </button>
+                                <button
+                                    onClick={() => setActiveTab('zip')}
+                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${activeTab === 'zip' ? 'bg-purple-500/20 text-purple-400 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                                >
+                                    📦 ZIP
+                                </button>
                             </div>
                         </div>
 
@@ -1079,94 +1085,99 @@ END:VCARD`;
                             </div>
                         )}
 
-                        {/* Grid */}
-                        {filteredImages.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 text-white/40">
-                                <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-                                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                </div>
-                                <p>No media found.</p>
+                        {/* Content based on active tab */}
+                        {activeTab === 'zip' ? (
+                            /* ZIP Tab Content */
+                            <div>
+                                {zipFiles.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                        {zipFiles.map((zip, idx) => (
+                                            <a
+                                                key={idx}
+                                                href={zip.url}
+                                                target="_blank"
+                                                className="block p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all group"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                                        📦
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="font-semibold text-white group-hover:text-purple-400 transition-colors">{zip.folderName}.zip</div>
+                                                        <div className="text-xs text-white/50">{zip.fileCount} files • {new Date(zip.timestamp).toLocaleTimeString()}</div>
+                                                    </div>
+                                                    <svg className="w-5 h-5 text-white/30 group-hover:text-purple-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                    </svg>
+                                                </div>
+                                            </a>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-20 text-white/40">
+                                        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-6 text-5xl">
+                                            📦
+                                        </div>
+                                        <p className="text-lg font-medium mb-2">No ZIP downloads yet</p>
+                                        <p className="text-sm text-white/30 text-center max-w-sm">When you download folders as ZIP from your device, they will appear here for easy access</p>
+                                    </div>
+                                )}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                {filteredImages.map((img) => (
-                                    <div
-                                        key={img.id}
-                                        className={`group relative aspect-square rounded-2xl overflow-hidden bg-white/5 border transition-all duration-300 ${selectedItems.has(img.id) ? 'border-purple-500 ring-2 ring-purple-500/50' : 'border-white/10 hover:border-white/30'}`}
-                                    >
-                                        {img.resource_type === 'video' ? (
-                                            <video src={img.url} className="w-full h-full object-cover" muted loop />
-                                        ) : (
-                                            <Image src={img.url} alt="Gallery Image" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
-                                        )}
-
-                                        {/* Click Area for Preview - LOWEST z-index */}
-                                        <div
-                                            className="absolute inset-0 cursor-pointer z-0"
-                                            onClick={() => setPreviewItem(img)}
-                                        />
-
-                                        {/* Video Play Icon - MIDDLE z-index */}
-                                        {img.resource_type === 'video' && (
-                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center pointer-events-none border-2 border-white/30 z-5">
-                                                <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                                            </div>
-                                        )}
-
-                                        {/* Selection Checkbox - HIGHEST z-index */}
-                                        <div className="absolute top-3 right-3 z-20">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    e.preventDefault();
-                                                    toggleSelection(img.id);
-                                                }}
-                                                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${selectedItems.has(img.id) ? 'bg-purple-500 border-purple-500 scale-110' : 'bg-black/40 backdrop-blur-sm border-white/70 hover:border-white hover:bg-black/60 hover:scale-110'}`}
-                                            >
-                                                {selectedItems.has(img.id) && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                                            </button>
+                            /* Images/Videos Grid */
+                            <>
+                                {filteredImages.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-20 text-white/40">
+                                        <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
+                                            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                         </div>
+                                        <p>No media found.</p>
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                ) : (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                        {filteredImages.map((img) => (
+                                            <div
+                                                key={img.id}
+                                                className={`group relative aspect-square rounded-2xl overflow-hidden bg-white/5 border transition-all duration-300 ${selectedItems.has(img.id) ? 'border-purple-500 ring-2 ring-purple-500/50' : 'border-white/10 hover:border-white/30'}`}
+                                            >
+                                                {img.resource_type === 'video' ? (
+                                                    <video src={img.url} className="w-full h-full object-cover" muted loop />
+                                                ) : (
+                                                    <Image src={img.url} alt="Gallery Image" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                                                )}
 
-                        {/* ZIP Downloads Section - Always Visible */}
-                        <div className="mt-12 mb-6">
-                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                                <span className="text-2xl">📦</span> ZIP Downloads
-                            </h2>
-                            {zipFiles.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                    {zipFiles.map((zip, idx) => (
-                                        <a
-                                            key={idx}
-                                            href={zip.url}
-                                            target="_blank"
-                                            className="block p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all group"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                                                    📦
-                                                </div>
-                                                <div>
-                                                    <div className="font-semibold text-white group-hover:text-purple-400 transition-colors">{zip.folderName}.zip</div>
-                                                    <div className="text-xs text-white/50">{zip.fileCount} files • {new Date(zip.timestamp).toLocaleTimeString()}</div>
+                                                {/* Click Area for Preview - LOWEST z-index */}
+                                                <div
+                                                    className="absolute inset-0 cursor-pointer z-0"
+                                                    onClick={() => setPreviewItem(img)}
+                                                />
+
+                                                {/* Video Play Icon - MIDDLE z-index */}
+                                                {img.resource_type === 'video' && (
+                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center pointer-events-none border-2 border-white/30 z-5">
+                                                        <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                                                    </div>
+                                                )}
+
+                                                {/* Selection Checkbox - HIGHEST z-index */}
+                                                <div className="absolute top-3 right-3 z-20">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            e.preventDefault();
+                                                            toggleSelection(img.id);
+                                                        }}
+                                                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${selectedItems.has(img.id) ? 'bg-purple-500 border-purple-500 scale-110' : 'bg-black/40 backdrop-blur-sm border-white/70 hover:border-white hover:bg-black/60 hover:scale-110'}`}
+                                                    >
+                                                        {selectedItems.has(img.id) && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                                    </button>
                                                 </div>
                                             </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="p-8 rounded-2xl bg-white/5 border border-white/10 text-center">
-                                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-purple-500/10 flex items-center justify-center text-3xl">
-                                        📦
+                                        ))}
                                     </div>
-                                    <p className="text-white/40 mb-2">No ZIP downloads yet</p>
-                                    <p className="text-xs text-white/30">When you download folders as ZIP, they will appear here</p>
-                                </div>
-                            )}
-                        </div>
+                                )}
+                            </>
+                        )}
 
                         {/* Preview Modal */}
                         {previewItem && (
