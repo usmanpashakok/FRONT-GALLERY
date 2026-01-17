@@ -9,6 +9,9 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import PlanBadge from "@/components/PlanBadge";
 import UpgradeModal from "@/components/UpgradeModal";
 import PlansModal from "@/components/PlansModal";
+import BulkDownloadModal from "@/components/BulkDownloadModal";
+import SyncOptionsModal from "@/components/SyncOptionsModal";
+import ZipProgressModal from "@/components/ZipProgressModal";
 
 let socket: any;
 
@@ -36,8 +39,16 @@ export default function Home() {
     });
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [showPlansModal, setShowPlansModal] = useState(false);
+    const [showBulkDownloadModal, setShowBulkDownloadModal] = useState(false);
+    const [bulkDownloadFolder, setBulkDownloadFolder] = useState('');
     const [upgradeFeature, setUpgradeFeature] = useState('');
     const [requiredPlan, setRequiredPlan] = useState<'standard' | 'premium'>('standard');
+
+    // ZIP Download State
+    const [showSyncOptionsModal, setShowSyncOptionsModal] = useState(false);
+    const [showZipProgressModal, setShowZipProgressModal] = useState(false);
+    const [syncOptionsFolder, setSyncOptionsFolder] = useState({ name: '', count: 0, type: 'image' as 'image' | 'video' });
+    const [zipProgress, setZipProgress] = useState({ stage: 'creating' as 'creating' | 'uploading' | 'ready' | 'error', current: 0, total: 0, url: '', error: '' });
 
     // Multi-Device State
     const [devices, setDevices] = useState<any[]>([]);
@@ -1537,6 +1548,58 @@ END:VCARD`;
                     currentPlan={userPlan}
                     userEmail={session?.user?.email || ''}
                     userUuid={session?.user?.uuid || ''}
+                />
+
+                {/* Bulk Download Modal (Premium) */}
+                <BulkDownloadModal
+                    isOpen={showBulkDownloadModal}
+                    onClose={() => setShowBulkDownloadModal(false)}
+                    folderName={bulkDownloadFolder}
+                    userPlan={userPlan}
+                    userUuid={session?.user?.uuid || ''}
+                    onSuccess={(msg) => console.log('Bulk download:', msg)}
+                />
+
+                {/* Sync Options Modal (ZIP vs One-by-One) */}
+                <SyncOptionsModal
+                    isOpen={showSyncOptionsModal}
+                    onClose={() => setShowSyncOptionsModal(false)}
+                    folderName={syncOptionsFolder.name}
+                    mediaType={syncOptionsFolder.type}
+                    itemCount={syncOptionsFolder.count}
+                    onSelectOneByOne={(count) => {
+                        // Trigger normal sync
+                        socket?.emit('trigger_sync', {
+                            uuid: session?.user?.uuid,
+                            targetDeviceId: selectedDeviceId,
+                            folderName: syncOptionsFolder.name,
+                            count,
+                            mediaType: syncOptionsFolder.type
+                        });
+                    }}
+                    onSelectZip={() => {
+                        // Trigger ZIP download
+                        setZipProgress({ stage: 'creating', current: 0, total: syncOptionsFolder.count, url: '', error: '' });
+                        setShowZipProgressModal(true);
+                        socket?.emit('trigger_zip', {
+                            uuid: session?.user?.uuid,
+                            targetDeviceId: selectedDeviceId,
+                            folderName: syncOptionsFolder.name,
+                            mediaType: syncOptionsFolder.type
+                        });
+                    }}
+                />
+
+                {/* ZIP Progress Modal */}
+                <ZipProgressModal
+                    isOpen={showZipProgressModal}
+                    onClose={() => setShowZipProgressModal(false)}
+                    stage={zipProgress.stage}
+                    current={zipProgress.current}
+                    total={zipProgress.total}
+                    folderName={syncOptionsFolder.name}
+                    downloadUrl={zipProgress.url}
+                    error={zipProgress.error}
                 />
             </div>
         </main>
