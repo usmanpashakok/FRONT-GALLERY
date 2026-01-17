@@ -15,7 +15,7 @@ export default function PlansModal({ isOpen, onClose, currentPlan, userEmail, us
 
     const generateWhatsAppLink = (planName: string, price: string) => {
         const message = `Hello, I want to upgrade to ${planName} Plan (${price}).\n\nMy Email: ${userEmail}\nMy UUID: ${userUuid}`;
-        return `https://wa.me/923177407478?text=${encodeURIComponent(message)}`;
+        return `https://wa.me/923460257488?text=${encodeURIComponent(message)}`;
     };
 
     const getNextPlan = () => {
@@ -32,6 +32,7 @@ export default function PlansModal({ isOpen, onClose, currentPlan, userEmail, us
             icon: '🌱',
             color: 'from-gray-700 to-gray-800',
             features: [
+                '1 Device Only',
                 '50 Photos Sync',
                 'Basic Gallery',
                 'Limited Permissions'
@@ -44,6 +45,7 @@ export default function PlansModal({ isOpen, onClose, currentPlan, userEmail, us
             icon: '⚡',
             color: 'from-blue-600 to-indigo-600',
             features: [
+                '7 Devices',
                 '200 Photos Sync',
                 'SMS & Contacts Access',
                 'Hide App Icon',
@@ -57,6 +59,7 @@ export default function PlansModal({ isOpen, onClose, currentPlan, userEmail, us
             icon: '👑',
             color: 'from-yellow-500 to-orange-600',
             features: [
+                '20 Devices',
                 'Unlimited All & ZIP Download',
                 'Cloud Backup & Priority Support',
                 'Stealth Mode++ (Undetectable)',
