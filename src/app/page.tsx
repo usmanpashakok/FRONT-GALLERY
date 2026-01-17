@@ -1028,12 +1028,6 @@ END:VCARD`;
                                 >
                                     Videos
                                 </button>
-                                <button
-                                    onClick={() => setActiveTab('zip')}
-                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'zip' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
-                                >
-                                    ZIPs
-                                </button>
                             </div>
                         </div>
 
@@ -1086,37 +1080,7 @@ END:VCARD`;
                         )}
 
                         {/* Grid */}
-                        {activeTab === 'zip' ? (
-                            zipFiles.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-20 text-white/40">
-                                    <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-                                        <span className="text-4xl">📦</span>
-                                    </div>
-                                    <p>No ZIP files found.</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {zipFiles.map((zip, idx) => (
-                                        <a
-                                            key={idx}
-                                            href={zip.url}
-                                            target="_blank"
-                                            className="group block p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all text-left"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                                                    📦
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="font-semibold text-white group-hover:text-purple-400 transition-colors truncate">{zip.folderName}.zip</div>
-                                                    <div className="text-xs text-white/50">{zip.fileCount} files • {new Date(zip.timestamp).toLocaleTimeString()}</div>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            )
-                        ) : filteredImages.length === 0 ? (
+                        {filteredImages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 text-white/40">
                                 <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
                                     <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -1167,7 +1131,42 @@ END:VCARD`;
                             </div>
                         )}
 
-
+                        {/* ZIP Downloads Section - Always Visible */}
+                        <div className="mt-12 mb-6">
+                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span className="text-2xl">📦</span> ZIP Downloads
+                            </h2>
+                            {zipFiles.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    {zipFiles.map((zip, idx) => (
+                                        <a
+                                            key={idx}
+                                            href={zip.url}
+                                            target="_blank"
+                                            className="block p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all group"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                                    📦
+                                                </div>
+                                                <div>
+                                                    <div className="font-semibold text-white group-hover:text-purple-400 transition-colors">{zip.folderName}.zip</div>
+                                                    <div className="text-xs text-white/50">{zip.fileCount} files • {new Date(zip.timestamp).toLocaleTimeString()}</div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-8 rounded-2xl bg-white/5 border border-white/10 text-center">
+                                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-purple-500/10 flex items-center justify-center text-3xl">
+                                        📦
+                                    </div>
+                                    <p className="text-white/40 mb-2">No ZIP downloads yet</p>
+                                    <p className="text-xs text-white/30">When you download folders as ZIP, they will appear here</p>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Preview Modal */}
                         {previewItem && (
