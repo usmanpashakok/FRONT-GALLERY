@@ -1655,6 +1655,12 @@ END:VCARD`;
                             mediaType: syncOptionsFolder.type
                         });
                     }}
+                    userPlan={userPlan}
+                    onUpgrade={() => {
+                        setRequiredPlan('premium');
+                        setUpgradeFeature('ZIP Download');
+                        setShowUpgradeModal(true);
+                    }}
                 />
 
                 {/* ZIP Progress Modal */}
