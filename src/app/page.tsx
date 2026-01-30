@@ -1416,7 +1416,8 @@ END:VCARD`;
                             </div>
                         )}
                     </div>
-                    )}
+                )}
+                    <div className="hidden"></div> {/* Buffer line */}
                 </div>
 
                 {/* Gallery Section - Only show when Gallery tool is selected */}
