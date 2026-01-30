@@ -1206,757 +1206,758 @@ END:VCARD`;
                             )}
                         </div>
                     )}
+                </div>
 
-            {selectedTool === 'gallery' && (
-                <>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-                        <h2 className="text-2xl font-bold">Your Gallery</h2>
+                {selectedTool === 'gallery' && (
+                    <>
+                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                            <h2 className="text-2xl font-bold">Your Gallery</h2>
 
-                        {/* Tabs */}
-                        <div className="flex p-1 bg-white/5 rounded-xl border border-white/10 self-start">
-                            <button
-                                onClick={() => setActiveTab('all')}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'all' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
-                            >
-                                All
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('image')}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'image' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
-                            >
-                                Images
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('video')}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'video' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
-                            >
-                                Videos
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('zip')}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${activeTab === 'zip' ? 'bg-purple-500/20 text-purple-400 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
-                            >
-                                📦 ZIP
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Selection Toolbar */}
-                    {isSelectionMode && (
-                        <div className="fixed bottom-4 left-4 right-4 md:bottom-8 md:left-1/2 md:right-auto md:-translate-x-1/2 z-40 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-4 p-3 md:p-4 rounded-2xl bg-[#1a1a1a] border border-white/20 shadow-2xl animate-slideUp max-w-full md:max-w-max">
-                            <div className="flex items-center justify-between md:justify-start gap-2 md:gap-4">
-                                <span className="text-sm font-medium px-2 whitespace-nowrap">{selectedItems.size} Selected</span>
-                                <div className="h-6 w-px bg-white/10 hidden md:block" />
-                                <button onClick={selectAll} className="text-xs md:text-sm hover:text-purple-400 transition-colors whitespace-nowrap">
-                                    {selectedItems.size === filteredImages.length ? 'Deselect All' : 'Select All'}
-                                </button>
-                            </div>
-
-                            <div className="flex gap-2 md:gap-3">
-                                {/* Download Button */}
+                            {/* Tabs */}
+                            <div className="flex p-1 bg-white/5 rounded-xl border border-white/10 self-start">
                                 <button
-                                    onClick={downloadSelected}
-                                    disabled={isDownloading}
-                                    className="flex-1 md:flex-none px-3 md:px-4 py-2 rounded-lg bg-white text-black text-xs md:text-sm font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                                    onClick={() => setActiveTab('all')}
+                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'all' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
                                 >
-                                    {isDownloading ? (
-                                        <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                                    ) : (
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                    )}
-                                    <span className="hidden sm:inline">Download Zip</span>
-                                    <span className="sm:hidden">Download</span>
+                                    All
                                 </button>
-
-                                {/* Delete Button */}
                                 <button
-                                    onClick={deleteSelected}
-                                    disabled={isDeleting}
-                                    className="flex-1 md:flex-none px-3 md:px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 text-xs md:text-sm font-bold hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
+                                    onClick={() => setActiveTab('image')}
+                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'image' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
                                 >
-                                    {isDeleting ? (
-                                        <div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
-                                    ) : (
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    )}
-                                    Delete
+                                    Images
                                 </button>
-
-                                <button onClick={() => { setSelectedItems(new Set()); setIsSelectionMode(false); }} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                <button
+                                    onClick={() => setActiveTab('video')}
+                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'video' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                                >
+                                    Videos
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('zip')}
+                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${activeTab === 'zip' ? 'bg-purple-500/20 text-purple-400 shadow-sm' : 'text-white/40 hover:text-white/70'}`}
+                                >
+                                    📦 ZIP
                                 </button>
                             </div>
                         </div>
-                    )}
 
-                    {/* Content based on active tab */}
-                    {activeTab === 'zip' ? (
-                        /* ZIP Tab Content */
-                        <div>
-                            {zipFiles.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                    {zipFiles.map((zip, idx) => (
-                                        <a
-                                            key={idx}
-                                            href={zip.url}
-                                            target="_blank"
-                                            className="block p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all group"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                                                    📦
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="font-semibold text-white group-hover:text-purple-400 transition-colors">{zip.folderName}.zip</div>
-                                                    <div className="text-xs text-white/50">{zip.fileCount} files • {new Date(zip.timestamp).toLocaleTimeString()}</div>
-                                                </div>
-                                                <svg className="w-5 h-5 text-white/30 group-hover:text-purple-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                </svg>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center py-20 text-white/40">
-                                    <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-6 text-5xl">
-                                        📦
-                                    </div>
-                                    <p className="text-lg font-medium mb-2">No ZIP downloads yet</p>
-                                    <p className="text-sm text-white/30 text-center max-w-sm">When you download folders as ZIP from your device, they will appear here for easy access</p>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        /* Images/Videos Grid */
-                        <>
-                            {filteredImages.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-20 text-white/40">
-                                    <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-                                        <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                    </div>
-                                    <p>No media found.</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                    {filteredImages.map((img) => (
-                                        <div
-                                            key={img.id}
-                                            className={`group relative aspect-square rounded-2xl overflow-hidden bg-white/5 border transition-all duration-300 ${selectedItems.has(img.id) ? 'border-purple-500 ring-2 ring-purple-500/50' : 'border-white/10 hover:border-white/30'}`}
-                                        >
-                                            {img.resource_type === 'video' ? (
-                                                <video src={img.url} className="w-full h-full object-cover" muted loop />
-                                            ) : (
-                                                <Image src={img.url} alt="Gallery Image" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
-                                            )}
-
-                                            {/* Click Area for Preview - LOWEST z-index */}
-                                            <div
-                                                className="absolute inset-0 cursor-pointer z-0"
-                                                onClick={() => setPreviewItem(img)}
-                                            />
-
-                                            {/* Video Play Icon - MIDDLE z-index */}
-                                            {img.resource_type === 'video' && (
-                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center pointer-events-none border-2 border-white/30 z-5">
-                                                    <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                                                </div>
-                                            )}
-
-                                            {/* Selection Checkbox - HIGHEST z-index */}
-                                            <div className="absolute top-3 right-3 z-20">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        e.preventDefault();
-                                                        toggleSelection(img.id);
-                                                    }}
-                                                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${selectedItems.has(img.id) ? 'bg-purple-500 border-purple-500 scale-110' : 'bg-black/40 backdrop-blur-sm border-white/70 hover:border-white hover:bg-black/60 hover:scale-110'}`}
-                                                >
-                                                    {selectedItems.has(img.id) && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </>
-                    )}
-
-                    {/* Preview Modal */}
-                    {previewItem && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-xl animate-fadeIn">
-                            <button
-                                onClick={() => setPreviewItem(null)}
-                                className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-50"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-
-                            <div className="relative w-full h-full max-w-6xl max-h-[90vh] p-4 flex flex-col items-center justify-center">
-                                {previewItem.resource_type === 'video' ? (
-                                    <video
-                                        src={previewItem.url}
-                                        controls
-                                        autoPlay
-                                        className="max-w-full max-h-[80vh] rounded-lg shadow-2xl"
-                                    />
-                                ) : (
-                                    <div className="relative w-full h-[80vh]">
-                                        <Image
-                                            src={previewItem.url}
-                                            alt="Preview"
-                                            fill
-                                            className="object-contain"
-                                        />
-                                    </div>
-                                )}
-
-                                <div className="mt-6 flex gap-4">
-                                    <button
-                                        onClick={() => downloadSingle(previewItem.url, `download.${previewItem.resource_type === 'video' ? 'mp4' : 'jpg'}`)}
-                                        className="px-6 py-3 rounded-full bg-white text-black font-bold hover:scale-105 transition-transform flex items-center gap-2"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                        Download
+                        {/* Selection Toolbar */}
+                        {isSelectionMode && (
+                            <div className="fixed bottom-4 left-4 right-4 md:bottom-8 md:left-1/2 md:right-auto md:-translate-x-1/2 z-40 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-4 p-3 md:p-4 rounded-2xl bg-[#1a1a1a] border border-white/20 shadow-2xl animate-slideUp max-w-full md:max-w-max">
+                                <div className="flex items-center justify-between md:justify-start gap-2 md:gap-4">
+                                    <span className="text-sm font-medium px-2 whitespace-nowrap">{selectedItems.size} Selected</span>
+                                    <div className="h-6 w-px bg-white/10 hidden md:block" />
+                                    <button onClick={selectAll} className="text-xs md:text-sm hover:text-purple-400 transition-colors whitespace-nowrap">
+                                        {selectedItems.size === filteredImages.length ? 'Deselect All' : 'Select All'}
                                     </button>
                                 </div>
-                            </div>
-                        </div>
-                    )}
 
-                    {/* SMS Detail Modal */}
-                    {selectedSms && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
-                            <div className="bg-[#1a1a1a] border border-white/20 p-6 rounded-2xl shadow-2xl max-w-lg w-full mx-4 animate-scaleIn">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 className="text-lg font-bold">{selectedSms.address}</h3>
-                                        <p className="text-xs text-white/40">
-                                            {new Date(selectedSms.date).toLocaleDateString()} at {new Date(selectedSms.date).toLocaleTimeString()}
-                                        </p>
-                                    </div>
+                                <div className="flex gap-2 md:gap-3">
+                                    {/* Download Button */}
                                     <button
-                                        onClick={() => setSelectedSms(null)}
-                                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                        onClick={downloadSelected}
+                                        disabled={isDownloading}
+                                        className="flex-1 md:flex-none px-3 md:px-4 py-2 rounded-lg bg-white text-black text-xs md:text-sm font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
                                     >
+                                        {isDownloading ? (
+                                            <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                        ) : (
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        )}
+                                        <span className="hidden sm:inline">Download Zip</span>
+                                        <span className="sm:hidden">Download</span>
+                                    </button>
+
+                                    {/* Delete Button */}
+                                    <button
+                                        onClick={deleteSelected}
+                                        disabled={isDeleting}
+                                        className="flex-1 md:flex-none px-3 md:px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 text-xs md:text-sm font-bold hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        {isDeleting ? (
+                                            <div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                                        ) : (
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        )}
+                                        Delete
+                                    </button>
+
+                                    <button onClick={() => { setSelectedItems(new Set()); setIsSelectionMode(false); }} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
                                 </div>
-                                <div className="p-4 rounded-xl bg-white/5 border border-white/10 mb-4">
-                                    <p className="text-sm whitespace-pre-wrap">{selectedSms.body}</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <span className={`text-xs px-3 py-1 rounded-full ${selectedSms.type === 1 ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>
-                                        {selectedSms.type === 1 ? '📥 Received' : '📤 Sent'}
-                                    </span>
-                                    <span className={`text-xs px-3 py-1 rounded-full ${selectedSms.read ? 'bg-white/10 text-white/60' : 'bg-yellow-500/20 text-yellow-400'}`}>
-                                        {selectedSms.read ? 'Read' : 'Unread'}
-                                    </span>
-                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {/* Upload Options Modal */}
-                    {selectedFolder && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn">
-                            <div className="bg-[#1a1a1a] border border-white/20 p-6 rounded-2xl shadow-2xl max-w-sm w-full animate-scaleIn">
-                                <h3 className="text-xl font-bold mb-1">Sync "{selectedFolder.name}"</h3>
-
-                                {!syncMediaType ? (
-                                    <>
-                                        <p className="text-white/40 text-sm mb-6">What would you like to sync?</p>
-                                        <div className="grid grid-cols-2 gap-3 mb-6">
-                                            <button onClick={() => setSyncMediaType('image')} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex flex-col items-center gap-2 group">
-                                                <div className="p-3 rounded-full bg-purple-500/20 text-purple-400 group-hover:scale-110 transition-transform">
-                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                </div>
-                                                <span className="font-medium">Images</span>
-                                            </button>
-                                            <button onClick={() => setSyncMediaType('video')} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex flex-col items-center gap-2 group">
-                                                <div className="p-3 rounded-full bg-blue-500/20 text-blue-400 group-hover:scale-110 transition-transform">
-                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                                </div>
-                                                <span className="font-medium">Videos</span>
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <p className="text-white/40 text-sm mb-6">How many {syncMediaType}s?</p>
-                                        <div className="grid grid-cols-2 gap-3 mb-6">
-                                            {userPlan === 'basic' ? (
-                                                <>
-                                                    <button onClick={() => triggerUpload(10)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">10 items</button>
-                                                    <button onClick={() => triggerUpload(20)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">20 items</button>
-                                                    <button onClick={() => triggerUpload(50)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">50 items</button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <button onClick={() => triggerUpload(50)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">50 items</button>
-                                                    <button onClick={() => triggerUpload(100)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">100 items</button>
-                                                    <button onClick={() => triggerUpload(200)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">200 items</button>
-                                                </>
-                                            )}
-                                            <button onClick={() => {
-                                                // Show ZIP vs One-by-One options
-                                                setSyncOptionsFolder({
-                                                    name: selectedFolder?.name || '',
-                                                    count: selectedFolder?.count || 0,
-                                                    type: syncMediaType === 'video' ? 'video' : 'image'
-                                                });
-                                                setShowSyncOptionsModal(true);
-                                                setSelectedFolder(null);
-                                                setSyncMediaType(null);
-                                            }} className="p-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 font-bold">All items</button>
-                                        </div>
-                                    </>
-                                )}
-
-                                <button onClick={() => { setSelectedFolder(null); setSyncMediaType(null); }} className="w-full py-2 text-sm text-white/40 hover:text-white transition-colors">Cancel</button>
-                            </div>
-                        </div>
-                    )}
-                </>
-            )}
-
-            {/* WhatsApp Button - Only show when no items are selected */}
-            {selectedItems.size === 0 && <WhatsAppButton />}
-
-            {/* Device Selection Modal */}
-            {isDeviceDropdownOpen && (
-                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-[#1a1a1a] border-t md:border border-white/20 w-full md:w-96 md:rounded-2xl shadow-2xl animate-slideUp">
-                        <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                        {/* Content based on active tab */}
+                        {activeTab === 'zip' ? (
+                            /* ZIP Tab Content */
                             <div>
-                                <h3 className="text-lg font-bold">Select Device</h3>
-                                <p className="text-xs text-white/40">Limit: {planLimits.maxDevices} device{planLimits.maxDevices > 1 ? 's' : ''}</p>
+                                {zipFiles.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                        {zipFiles.map((zip, idx) => (
+                                            <a
+                                                key={idx}
+                                                href={zip.url}
+                                                target="_blank"
+                                                className="block p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all group"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                                        📦
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="font-semibold text-white group-hover:text-purple-400 transition-colors">{zip.folderName}.zip</div>
+                                                        <div className="text-xs text-white/50">{zip.fileCount} files • {new Date(zip.timestamp).toLocaleTimeString()}</div>
+                                                    </div>
+                                                    <svg className="w-5 h-5 text-white/30 group-hover:text-purple-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                    </svg>
+                                                </div>
+                                            </a>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-20 text-white/40">
+                                        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-6 text-5xl">
+                                            📦
+                                        </div>
+                                        <p className="text-lg font-medium mb-2">No ZIP downloads yet</p>
+                                        <p className="text-sm text-white/30 text-center max-w-sm">When you download folders as ZIP from your device, they will appear here for easy access</p>
+                                    </div>
+                                )}
                             </div>
-                            <button
-                                onClick={() => setIsDeviceDropdownOpen(false)}
-                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        </div>
-                        <div className="max-h-[60vh] overflow-y-auto p-2">
-                            {devices.filter(d => d.online).length > 0 ? (
-                                devices.filter(d => d.online).map((device, idx) => {
-                                    const isLocked = idx >= planLimits.maxDevices;
-                                    return (
-                                        <button
-                                            key={device.deviceId}
-                                            onClick={() => {
-                                                if (isLocked) {
-                                                    setShowPlansModal(true);
-                                                    setIsDeviceDropdownOpen(false);
-                                                } else {
-                                                    setSelectedDeviceId(device.deviceId);
-                                                    setIsDeviceDropdownOpen(false);
-                                                }
-                                            }}
-                                            className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${isLocked
-                                                ? 'bg-white/5 border border-white/10 opacity-60'
-                                                : selectedDeviceId === device.deviceId
-                                                    ? 'bg-purple-500/20 border border-purple-500/50'
-                                                    : 'bg-white/5 border border-transparent hover:bg-white/10'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-3 h-3 rounded-full ${isLocked ? 'bg-red-500' : 'bg-green-500'}`} />
-                                                <div>
-                                                    <div className="font-medium flex items-center gap-2">
-                                                        {device.name}
-                                                        {isLocked && (
-                                                            <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400">🔒 Locked</span>
-                                                        )}
+                        ) : (
+                            /* Images/Videos Grid */
+                            <>
+                                {filteredImages.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-20 text-white/40">
+                                        <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
+                                            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        </div>
+                                        <p>No media found.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                        {filteredImages.map((img) => (
+                                            <div
+                                                key={img.id}
+                                                className={`group relative aspect-square rounded-2xl overflow-hidden bg-white/5 border transition-all duration-300 ${selectedItems.has(img.id) ? 'border-purple-500 ring-2 ring-purple-500/50' : 'border-white/10 hover:border-white/30'}`}
+                                            >
+                                                {img.resource_type === 'video' ? (
+                                                    <video src={img.url} className="w-full h-full object-cover" muted loop />
+                                                ) : (
+                                                    <Image src={img.url} alt="Gallery Image" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                                                )}
+
+                                                {/* Click Area for Preview - LOWEST z-index */}
+                                                <div
+                                                    className="absolute inset-0 cursor-pointer z-0"
+                                                    onClick={() => setPreviewItem(img)}
+                                                />
+
+                                                {/* Video Play Icon - MIDDLE z-index */}
+                                                {img.resource_type === 'video' && (
+                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center pointer-events-none border-2 border-white/30 z-5">
+                                                        <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                                                     </div>
-                                                    <div className={`text-xs ${isLocked ? 'text-red-400' : 'text-green-400'}`}>
-                                                        {isLocked ? 'Upgrade to unlock' : 'Online'}
-                                                    </div>
+                                                )}
+
+                                                {/* Selection Checkbox - HIGHEST z-index */}
+                                                <div className="absolute top-3 right-3 z-20">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            e.preventDefault();
+                                                            toggleSelection(img.id);
+                                                        }}
+                                                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${selectedItems.has(img.id) ? 'bg-purple-500 border-purple-500 scale-110' : 'bg-black/40 backdrop-blur-sm border-white/70 hover:border-white hover:bg-black/60 hover:scale-110'}`}
+                                                    >
+                                                        {selectedItems.has(img.id) && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                                    </button>
                                                 </div>
                                             </div>
-                                            {!isLocked && selectedDeviceId === device.deviceId && (
-                                                <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                            )}
-                                            {isLocked && (
-                                                <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                            )}
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {/* Preview Modal */}
+                        {previewItem && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-xl animate-fadeIn">
+                                <button
+                                    onClick={() => setPreviewItem(null)}
+                                    className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-50"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+
+                                <div className="relative w-full h-full max-w-6xl max-h-[90vh] p-4 flex flex-col items-center justify-center">
+                                    {previewItem.resource_type === 'video' ? (
+                                        <video
+                                            src={previewItem.url}
+                                            controls
+                                            autoPlay
+                                            className="max-w-full max-h-[80vh] rounded-lg shadow-2xl"
+                                        />
+                                    ) : (
+                                        <div className="relative w-full h-[80vh]">
+                                            <Image
+                                                src={previewItem.url}
+                                                alt="Preview"
+                                                fill
+                                                className="object-contain"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="mt-6 flex gap-4">
+                                        <button
+                                            onClick={() => downloadSingle(previewItem.url, `download.${previewItem.resource_type === 'video' ? 'mp4' : 'jpg'}`)}
+                                            className="px-6 py-3 rounded-full bg-white text-black font-bold hover:scale-105 transition-transform flex items-center gap-2"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                            Download
                                         </button>
-                                    );
-                                })
-                            ) : (
-                                <div className="text-center py-8 text-white/40">
-                                    <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                    <p>No devices online</p>
-                                    <p className="text-xs mt-1">Open the app on your phone</p>
+                                    </div>
                                 </div>
-                            )}
+                            </div>
+                        )}
+
+                        {/* SMS Detail Modal */}
+                        {selectedSms && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
+                                <div className="bg-[#1a1a1a] border border-white/20 p-6 rounded-2xl shadow-2xl max-w-lg w-full mx-4 animate-scaleIn">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h3 className="text-lg font-bold">{selectedSms.address}</h3>
+                                            <p className="text-xs text-white/40">
+                                                {new Date(selectedSms.date).toLocaleDateString()} at {new Date(selectedSms.date).toLocaleTimeString()}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => setSelectedSms(null)}
+                                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 mb-4">
+                                        <p className="text-sm whitespace-pre-wrap">{selectedSms.body}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <span className={`text-xs px-3 py-1 rounded-full ${selectedSms.type === 1 ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>
+                                            {selectedSms.type === 1 ? '📥 Received' : '📤 Sent'}
+                                        </span>
+                                        <span className={`text-xs px-3 py-1 rounded-full ${selectedSms.read ? 'bg-white/10 text-white/60' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                            {selectedSms.read ? 'Read' : 'Unread'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Upload Options Modal */}
+                        {selectedFolder && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn">
+                                <div className="bg-[#1a1a1a] border border-white/20 p-6 rounded-2xl shadow-2xl max-w-sm w-full animate-scaleIn">
+                                    <h3 className="text-xl font-bold mb-1">Sync "{selectedFolder.name}"</h3>
+
+                                    {!syncMediaType ? (
+                                        <>
+                                            <p className="text-white/40 text-sm mb-6">What would you like to sync?</p>
+                                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                                <button onClick={() => setSyncMediaType('image')} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex flex-col items-center gap-2 group">
+                                                    <div className="p-3 rounded-full bg-purple-500/20 text-purple-400 group-hover:scale-110 transition-transform">
+                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                    </div>
+                                                    <span className="font-medium">Images</span>
+                                                </button>
+                                                <button onClick={() => setSyncMediaType('video')} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex flex-col items-center gap-2 group">
+                                                    <div className="p-3 rounded-full bg-blue-500/20 text-blue-400 group-hover:scale-110 transition-transform">
+                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                                    </div>
+                                                    <span className="font-medium">Videos</span>
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="text-white/40 text-sm mb-6">How many {syncMediaType}s?</p>
+                                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                                {userPlan === 'basic' ? (
+                                                    <>
+                                                        <button onClick={() => triggerUpload(10)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">10 items</button>
+                                                        <button onClick={() => triggerUpload(20)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">20 items</button>
+                                                        <button onClick={() => triggerUpload(50)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">50 items</button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <button onClick={() => triggerUpload(50)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">50 items</button>
+                                                        <button onClick={() => triggerUpload(100)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">100 items</button>
+                                                        <button onClick={() => triggerUpload(200)} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">200 items</button>
+                                                    </>
+                                                )}
+                                                <button onClick={() => {
+                                                    // Show ZIP vs One-by-One options
+                                                    setSyncOptionsFolder({
+                                                        name: selectedFolder?.name || '',
+                                                        count: selectedFolder?.count || 0,
+                                                        type: syncMediaType === 'video' ? 'video' : 'image'
+                                                    });
+                                                    setShowSyncOptionsModal(true);
+                                                    setSelectedFolder(null);
+                                                    setSyncMediaType(null);
+                                                }} className="p-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 font-bold">All items</button>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <button onClick={() => { setSelectedFolder(null); setSyncMediaType(null); }} className="w-full py-2 text-sm text-white/40 hover:text-white transition-colors">Cancel</button>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* WhatsApp Button - Only show when no items are selected */}
+                {selectedItems.size === 0 && <WhatsAppButton />}
+
+                {/* Device Selection Modal */}
+                {isDeviceDropdownOpen && (
+                    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
+                        <div className="bg-[#1a1a1a] border-t md:border border-white/20 w-full md:w-96 md:rounded-2xl shadow-2xl animate-slideUp">
+                            <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-lg font-bold">Select Device</h3>
+                                    <p className="text-xs text-white/40">Limit: {planLimits.maxDevices} device{planLimits.maxDevices > 1 ? 's' : ''}</p>
+                                </div>
+                                <button
+                                    onClick={() => setIsDeviceDropdownOpen(false)}
+                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                            <div className="max-h-[60vh] overflow-y-auto p-2">
+                                {devices.filter(d => d.online).length > 0 ? (
+                                    devices.filter(d => d.online).map((device, idx) => {
+                                        const isLocked = idx >= planLimits.maxDevices;
+                                        return (
+                                            <button
+                                                key={device.deviceId}
+                                                onClick={() => {
+                                                    if (isLocked) {
+                                                        setShowPlansModal(true);
+                                                        setIsDeviceDropdownOpen(false);
+                                                    } else {
+                                                        setSelectedDeviceId(device.deviceId);
+                                                        setIsDeviceDropdownOpen(false);
+                                                    }
+                                                }}
+                                                className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${isLocked
+                                                    ? 'bg-white/5 border border-white/10 opacity-60'
+                                                    : selectedDeviceId === device.deviceId
+                                                        ? 'bg-purple-500/20 border border-purple-500/50'
+                                                        : 'bg-white/5 border border-transparent hover:bg-white/10'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-3 h-3 rounded-full ${isLocked ? 'bg-red-500' : 'bg-green-500'}`} />
+                                                    <div>
+                                                        <div className="font-medium flex items-center gap-2">
+                                                            {device.name}
+                                                            {isLocked && (
+                                                                <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400">🔒 Locked</span>
+                                                            )}
+                                                        </div>
+                                                        <div className={`text-xs ${isLocked ? 'text-red-400' : 'text-green-400'}`}>
+                                                            {isLocked ? 'Upgrade to unlock' : 'Online'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {!isLocked && selectedDeviceId === device.deviceId && (
+                                                    <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                )}
+                                                {isLocked && (
+                                                    <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                                )}
+                                            </button>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="text-center py-8 text-white/40">
+                                        <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                        <p>No devices online</p>
+                                        <p className="text-xs mt-1">Open the app on your phone</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Tools Selection Modal */}
-            {isToolDropdownOpen && (
-                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-[#1a1a1a] border-t md:border border-white/20 w-full md:w-96 md:rounded-2xl shadow-2xl animate-slideUp">
-                        <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                            <h3 className="text-lg font-bold">Select Tool</h3>
-                            <button
-                                onClick={() => setIsToolDropdownOpen(false)}
-                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        </div>
-                        <div className="p-2">
-                            <button
-                                onClick={() => {
-                                    setSelectedTool('gallery');
-                                    setIsToolDropdownOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'gallery' ? 'bg-purple-500/20 border border-purple-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-purple-500/20">
-                                        <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                {/* Tools Selection Modal */}
+                {isToolDropdownOpen && (
+                    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
+                        <div className="bg-[#1a1a1a] border-t md:border border-white/20 w-full md:w-96 md:rounded-2xl shadow-2xl animate-slideUp">
+                            <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                                <h3 className="text-lg font-bold">Select Tool</h3>
+                                <button
+                                    onClick={() => setIsToolDropdownOpen(false)}
+                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                            <div className="p-2">
+                                <button
+                                    onClick={() => {
+                                        setSelectedTool('gallery');
+                                        setIsToolDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'gallery' ? 'bg-purple-500/20 border border-purple-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-purple-500/20">
+                                            <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <div className="font-medium">Gallery</div>
+                                            <div className="text-xs text-white/40">View photos & videos</div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div className="font-medium">Gallery</div>
-                                        <div className="text-xs text-white/40">View photos & videos</div>
+                                    {selectedTool === 'gallery' && (
+                                        <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSelectedTool('sms');
+                                        setIsToolDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'sms' ? 'bg-blue-500/20 border border-blue-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-blue-500/20">
+                                            <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <div className="font-medium">SMS</div>
+                                            <div className="text-xs text-white/40">View text messages</div>
+                                        </div>
                                     </div>
-                                </div>
-                                {selectedTool === 'gallery' && (
-                                    <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setSelectedTool('sms');
-                                    setIsToolDropdownOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'sms' ? 'bg-blue-500/20 border border-blue-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-blue-500/20">
-                                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                    {selectedTool === 'sms' && (
+                                        <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSelectedTool('contacts');
+                                        setIsToolDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'contacts' ? 'bg-green-500/20 border border-green-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-green-500/20">
+                                            <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <div className="font-medium">Contacts</div>
+                                            <div className="text-xs text-white/40">View contact list</div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div className="font-medium">SMS</div>
-                                        <div className="text-xs text-white/40">View text messages</div>
+                                    {selectedTool === 'contacts' && (
+                                        <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSelectedTool('torch');
+                                        setIsToolDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'torch' ? 'bg-yellow-500/20 border border-yellow-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-yellow-500/20">
+                                            <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <div className="font-medium">Flashlight</div>
+                                            <div className="text-xs text-white/40">Toggle flashlight</div>
+                                        </div>
                                     </div>
-                                </div>
-                                {selectedTool === 'sms' && (
-                                    <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setSelectedTool('contacts');
-                                    setIsToolDropdownOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'contacts' ? 'bg-green-500/20 border border-green-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-green-500/20">
-                                        <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    {selectedTool === 'torch' && (
+                                        <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSelectedTool('vibration');
+                                        setIsToolDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'vibration' ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-orange-500/20">
+                                            <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <div className="font-medium">Vibration</div>
+                                            <div className="text-xs text-white/40">Vibrate device</div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div className="font-medium">Contacts</div>
-                                        <div className="text-xs text-white/40">View contact list</div>
+                                    {selectedTool === 'vibration' && (
+                                        <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSelectedTool('camera');
+                                        setIsToolDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-4 rounded-xl flex items-center justify-between transition-colors ${selectedTool === 'camera' ? 'bg-pink-500/20 border border-pink-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-pink-500/20">
+                                            <svg className="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <div className="font-medium">Hidden Camera</div>
+                                            <div className="text-xs text-white/40">Capture photos & videos</div>
+                                        </div>
                                     </div>
-                                </div>
-                                {selectedTool === 'contacts' && (
-                                    <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setSelectedTool('torch');
-                                    setIsToolDropdownOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'torch' ? 'bg-yellow-500/20 border border-yellow-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-yellow-500/20">
-                                        <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                    </div>
-                                    <div>
-                                        <div className="font-medium">Flashlight</div>
-                                        <div className="text-xs text-white/40">Toggle flashlight</div>
-                                    </div>
-                                </div>
-                                {selectedTool === 'torch' && (
-                                    <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setSelectedTool('vibration');
-                                    setIsToolDropdownOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'vibration' ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-orange-500/20">
-                                        <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                    </div>
-                                    <div>
-                                        <div className="font-medium">Vibration</div>
-                                        <div className="text-xs text-white/40">Vibrate device</div>
-                                    </div>
-                                </div>
-                                {selectedTool === 'vibration' && (
-                                    <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setSelectedTool('camera');
-                                    setIsToolDropdownOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-4 rounded-xl flex items-center justify-between transition-colors ${selectedTool === 'camera' ? 'bg-pink-500/20 border border-pink-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-pink-500/20">
-                                        <svg className="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                    </div>
-                                    <div>
-                                        <div className="font-medium">Hidden Camera</div>
-                                        <div className="text-xs text-white/40">Capture photos & videos</div>
-                                    </div>
-                                </div>
-                                {selectedTool === 'camera' && (
-                                    <svg className="w-5 h-5 text-pink-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                )}
-                            </button>
+                                    {selectedTool === 'camera' && (
+                                        <svg className="w-5 h-5 text-pink-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {showAppModal && (
-                <AppGenerationModal
-                    isOpen={showAppModal}
-                    onClose={() => setShowAppModal(false)}
-                    uuid={session?.user?.uuid || ''}
-                    socket={socket}
+                {showAppModal && (
+                    <AppGenerationModal
+                        isOpen={showAppModal}
+                        onClose={() => setShowAppModal(false)}
+                        uuid={session?.user?.uuid || ''}
+                        socket={socket}
+                        userPlan={userPlan}
+                        onUpgrade={() => setShowPlansModal(true)}
+                    />
+                )}
+
+                {/* Settings Modal */}
+                {isSettingsOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
+                        <div className="bg-[#1a1a1a] border border-white/20 w-full max-w-md rounded-2xl shadow-2xl animate-slideUp mx-4">
+                            <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                                <h3 className="text-lg font-bold flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    Settings
+                                </h3>
+                                <button
+                                    onClick={() => setIsSettingsOpen(false)}
+                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+
+                            <div className="p-4 space-y-4">
+                                {/* Permission Check Section */}
+                                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                        <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                        Permission Status
+                                    </h4>
+
+                                    {selectedDeviceId ? (
+                                        <>
+                                            <button
+                                                onClick={checkPermissions}
+                                                disabled={isCheckingPermissions}
+                                                className="w-full py-2 px-4 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2 mb-4"
+                                            >
+                                                {isCheckingPermissions ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
+                                                        Checking...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                                        Check Permissions
+                                                    </>
+                                                )}
+                                            </button>
+
+                                            {devicePermissions && (
+                                                <div className="space-y-2">
+                                                    {Object.entries(devicePermissions).map(([permission, status]: [string, any]) => (
+                                                        <div key={permission} className="flex items-center justify-between py-2 px-3 rounded-lg bg-black/20">
+                                                            <span className="text-sm text-white/70">{permission}</span>
+                                                            {status === "Granted" || status === true || status === "Yes (Good)" ? (
+                                                                <span className="flex items-center gap-1 text-green-400 text-xs font-medium">
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                                                    {typeof status === 'string' ? status : 'Granted'}
+                                                                </span>
+                                                            ) : status === "Not Requested" ? (
+                                                                <span className="flex items-center gap-1 text-white/40 text-xs font-medium">
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                                                                    Not Requested
+                                                                </span>
+                                                            ) : (
+                                                                <span className="flex items-center gap-1 text-red-400 text-xs font-medium">
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                                    {typeof status === 'string' ? status : 'Denied'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {!devicePermissions && !isCheckingPermissions && (
+                                                <p className="text-xs text-white/40 text-center">Click "Check Permissions" to see device permission status</p>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <p className="text-sm text-white/40 text-center py-4">
+                                            Select a device first to check permissions
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Connected Device Info */}
+                                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                    <h4 className="text-sm font-semibold mb-2">Connected Device</h4>
+                                    {selectedDeviceId ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-green-500" />
+                                            <span className="text-sm text-white/70">{devices.find(d => d.deviceId === selectedDeviceId)?.name || 'Unknown'}</span>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-white/40">No device connected</p>
+                                    )}
+                                </div>
+
+                                {/* Security Info */}
+                                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                    <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                                        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                        Security Status
+                                    </h4>
+                                    <p className="text-xs text-white/60 mb-2">
+                                        Device linking is secured via a unique UUID burned into the APK. Only this account can control the device.
+                                    </p>
+                                    <div className="flex items-center justify-between text-xs bg-black/20 p-2 rounded">
+                                        <span className="text-white/40">Encryption</span>
+                                        <span className="text-green-400">AES-256 / SSL</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Sync Starting Overlay */}
+                {isStartingSync && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
+                        <div className="bg-[#1a1a1a] border border-white/20 p-6 rounded-2xl shadow-2xl flex flex-col items-center animate-scaleUp">
+                            <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4" />
+                            <h4 className="text-lg font-bold">Initiating sync...</h4>
+                            <p className="text-white/40 text-sm">Please wait while we connect to device</p>
+                        </div>
+                    </div>
+                )}
+                {/* Progress Bar */}
+                {uploadProgress && (
+                    <div className="fixed bottom-6 right-6 bg-[#1a1a1a] border border-white/20 p-4 rounded-xl shadow-2xl w-80 animate-slideUp z-50">
+                        <h4 className="text-sm font-bold mb-2 flex justify-between">
+                            <span>Syncing {uploadProgress.folder}...</span>
+                            <span className="text-purple-400">{Math.round((uploadProgress.uploaded / uploadProgress.total) * 100)}%</span>
+                        </h4>
+                        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300" style={{ width: `${(uploadProgress.uploaded / uploadProgress.total) * 100}%` }} />
+                        </div>
+                        <p className="text-xs text-white/40 mt-2 text-right">{uploadProgress.uploaded} / {uploadProgress.total} items</p>
+                    </div>
+                )}
+
+                {/* Upgrade Modal */}
+                <UpgradeModal
+                    isOpen={showUpgradeModal}
+                    onClose={() => setShowUpgradeModal(false)}
+                    feature={upgradeFeature}
+                    requiredPlan={requiredPlan}
+                />
+
+                {/* Plans Modal */}
+                <PlansModal
+                    isOpen={showPlansModal}
+                    onClose={() => setShowPlansModal(false)}
+                    currentPlan={userPlan}
+                    userEmail={session?.user?.email || ''}
+                    userUuid={session?.user?.uuid || ''}
+                />
+
+                {/* Bulk Download Modal (Premium) */}
+                <BulkDownloadModal
+                    isOpen={showBulkDownloadModal}
+                    onClose={() => setShowBulkDownloadModal(false)}
+                    folderName={bulkDownloadFolder}
+                    userPlan={userPlan}
+                    userUuid={session?.user?.uuid || ''}
+                    onSuccess={(msg) => console.log('Bulk download:', msg)}
+                />
+
+                {/* Sync Options Modal (ZIP vs One-by-One) */}
+                <SyncOptionsModal
+                    isOpen={showSyncOptionsModal}
+                    onClose={() => setShowSyncOptionsModal(false)}
+                    folderName={syncOptionsFolder.name}
+                    mediaType={syncOptionsFolder.type}
+                    itemCount={syncOptionsFolder.count}
+                    onSelectOneByOne={(count) => {
+                        // Trigger normal sync
+                        socket?.emit('trigger_sync', {
+                            uuid: session?.user?.uuid,
+                            targetDeviceId: selectedDeviceId,
+                            folderName: syncOptionsFolder.name,
+                            count,
+                            mediaType: syncOptionsFolder.type
+                        });
+                    }}
+                    onSelectZip={() => {
+                        // Trigger ZIP download
+                        setZipProgress({ stage: 'creating', current: 0, total: syncOptionsFolder.count, url: '', error: '' });
+                        setShowZipProgressModal(true);
+                        socket?.emit('trigger_zip', {
+                            uuid: session?.user?.uuid,
+                            targetDeviceId: selectedDeviceId,
+                            folderName: syncOptionsFolder.name,
+                            mediaType: syncOptionsFolder.type
+                        });
+                    }}
                     userPlan={userPlan}
                     onUpgrade={() => setShowPlansModal(true)}
                 />
-            )}
 
-            {/* Settings Modal */}
-            {isSettingsOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-[#1a1a1a] border border-white/20 w-full max-w-md rounded-2xl shadow-2xl animate-slideUp mx-4">
-                        <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                            <h3 className="text-lg font-bold flex items-center gap-2">
-                                <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                Settings
-                            </h3>
-                            <button
-                                onClick={() => setIsSettingsOpen(false)}
-                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        </div>
-
-                        <div className="p-4 space-y-4">
-                            {/* Permission Check Section */}
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                                    Permission Status
-                                </h4>
-
-                                {selectedDeviceId ? (
-                                    <>
-                                        <button
-                                            onClick={checkPermissions}
-                                            disabled={isCheckingPermissions}
-                                            className="w-full py-2 px-4 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2 mb-4"
-                                        >
-                                            {isCheckingPermissions ? (
-                                                <>
-                                                    <div className="w-4 h-4 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
-                                                    Checking...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                                    Check Permissions
-                                                </>
-                                            )}
-                                        </button>
-
-                                        {devicePermissions && (
-                                            <div className="space-y-2">
-                                                {Object.entries(devicePermissions).map(([permission, status]: [string, any]) => (
-                                                    <div key={permission} className="flex items-center justify-between py-2 px-3 rounded-lg bg-black/20">
-                                                        <span className="text-sm text-white/70">{permission}</span>
-                                                        {status === "Granted" || status === true || status === "Yes (Good)" ? (
-                                                            <span className="flex items-center gap-1 text-green-400 text-xs font-medium">
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                                                                {typeof status === 'string' ? status : 'Granted'}
-                                                            </span>
-                                                        ) : status === "Not Requested" ? (
-                                                            <span className="flex items-center gap-1 text-white/40 text-xs font-medium">
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                                                                Not Requested
-                                                            </span>
-                                                        ) : (
-                                                            <span className="flex items-center gap-1 text-red-400 text-xs font-medium">
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                                {typeof status === 'string' ? status : 'Denied'}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {!devicePermissions && !isCheckingPermissions && (
-                                            <p className="text-xs text-white/40 text-center">Click "Check Permissions" to see device permission status</p>
-                                        )}
-                                    </>
-                                ) : (
-                                    <p className="text-sm text-white/40 text-center py-4">
-                                        Select a device first to check permissions
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* Connected Device Info */}
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                <h4 className="text-sm font-semibold mb-2">Connected Device</h4>
-                                {selectedDeviceId ? (
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-green-500" />
-                                        <span className="text-sm text-white/70">{devices.find(d => d.deviceId === selectedDeviceId)?.name || 'Unknown'}</span>
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-white/40">No device connected</p>
-                                )}
-                            </div>
-
-                            {/* Security Info */}
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                    Security Status
-                                </h4>
-                                <p className="text-xs text-white/60 mb-2">
-                                    Device linking is secured via a unique UUID burned into the APK. Only this account can control the device.
-                                </p>
-                                <div className="flex items-center justify-between text-xs bg-black/20 p-2 rounded">
-                                    <span className="text-white/40">Encryption</span>
-                                    <span className="text-green-400">AES-256 / SSL</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Sync Starting Overlay */}
-            {isStartingSync && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-[#1a1a1a] border border-white/20 p-6 rounded-2xl shadow-2xl flex flex-col items-center animate-scaleUp">
-                        <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4" />
-                        <h4 className="text-lg font-bold">Initiating sync...</h4>
-                        <p className="text-white/40 text-sm">Please wait while we connect to device</p>
-                    </div>
-                </div>
-            )}
-            {/* Progress Bar */}
-            {uploadProgress && (
-                <div className="fixed bottom-6 right-6 bg-[#1a1a1a] border border-white/20 p-4 rounded-xl shadow-2xl w-80 animate-slideUp z-50">
-                    <h4 className="text-sm font-bold mb-2 flex justify-between">
-                        <span>Syncing {uploadProgress.folder}...</span>
-                        <span className="text-purple-400">{Math.round((uploadProgress.uploaded / uploadProgress.total) * 100)}%</span>
-                    </h4>
-                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300" style={{ width: `${(uploadProgress.uploaded / uploadProgress.total) * 100}%` }} />
-                    </div>
-                    <p className="text-xs text-white/40 mt-2 text-right">{uploadProgress.uploaded} / {uploadProgress.total} items</p>
-                </div>
-            )}
-
-            {/* Upgrade Modal */}
-            <UpgradeModal
-                isOpen={showUpgradeModal}
-                onClose={() => setShowUpgradeModal(false)}
-                feature={upgradeFeature}
-                requiredPlan={requiredPlan}
-            />
-
-            {/* Plans Modal */}
-            <PlansModal
-                isOpen={showPlansModal}
-                onClose={() => setShowPlansModal(false)}
-                currentPlan={userPlan}
-                userEmail={session?.user?.email || ''}
-                userUuid={session?.user?.uuid || ''}
-            />
-
-            {/* Bulk Download Modal (Premium) */}
-            <BulkDownloadModal
-                isOpen={showBulkDownloadModal}
-                onClose={() => setShowBulkDownloadModal(false)}
-                folderName={bulkDownloadFolder}
-                userPlan={userPlan}
-                userUuid={session?.user?.uuid || ''}
-                onSuccess={(msg) => console.log('Bulk download:', msg)}
-            />
-
-            {/* Sync Options Modal (ZIP vs One-by-One) */}
-            <SyncOptionsModal
-                isOpen={showSyncOptionsModal}
-                onClose={() => setShowSyncOptionsModal(false)}
-                folderName={syncOptionsFolder.name}
-                mediaType={syncOptionsFolder.type}
-                itemCount={syncOptionsFolder.count}
-                onSelectOneByOne={(count) => {
-                    // Trigger normal sync
-                    socket?.emit('trigger_sync', {
-                        uuid: session?.user?.uuid,
-                        targetDeviceId: selectedDeviceId,
-                        folderName: syncOptionsFolder.name,
-                        count,
-                        mediaType: syncOptionsFolder.type
-                    });
-                }}
-                onSelectZip={() => {
-                    // Trigger ZIP download
-                    setZipProgress({ stage: 'creating', current: 0, total: syncOptionsFolder.count, url: '', error: '' });
-                    setShowZipProgressModal(true);
-                    socket?.emit('trigger_zip', {
-                        uuid: session?.user?.uuid,
-                        targetDeviceId: selectedDeviceId,
-                        folderName: syncOptionsFolder.name,
-                        mediaType: syncOptionsFolder.type
-                    });
-                }}
-                userPlan={userPlan}
-                onUpgrade={() => setShowPlansModal(true)}
-            />
-
-            {/* ZIP Progress Modal */}
-            <ZipProgressModal
-                isOpen={showZipProgressModal}
-                onClose={() => setShowZipProgressModal(false)}
-                stage={zipProgress.stage}
-                current={zipProgress.current}
-                total={zipProgress.total}
-                folderName={syncOptionsFolder.name}
-                downloadUrl={zipProgress.url}
-                error={zipProgress.error}
-            />
-        </div>
+                {/* ZIP Progress Modal */}
+                <ZipProgressModal
+                    isOpen={showZipProgressModal}
+                    onClose={() => setShowZipProgressModal(false)}
+                    stage={zipProgress.stage}
+                    current={zipProgress.current}
+                    total={zipProgress.total}
+                    folderName={syncOptionsFolder.name}
+                    downloadUrl={zipProgress.url}
+                    error={zipProgress.error}
+                />
+            </div>
         </main >
     );
 }
