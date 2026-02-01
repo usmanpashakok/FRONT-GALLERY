@@ -226,33 +226,6 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket, user
                                 Permission Manager
                             </h3>
 
-                            {/* Contacts Permission - Locked for Basic */}
-                            <div className={`flex items-center justify-between bg-white/5 p-3 rounded-lg border ${isBasicPlan ? 'border-yellow-500/30 opacity-60' : 'border-white/10'} mb-2`}>
-                                <div className="flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                    <span className="text-sm font-medium text-white/70">Contacts Access</span>
-                                    {isBasicPlan && <span className="text-[10px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">PRO</span>}
-                                    <button
-                                        onClick={() => setShowPermissionInfo('contacts')}
-                                        className="text-white/40 hover:text-green-400 transition-colors"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    </button>
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        if (isBasicPlan) {
-                                            onUpgrade?.();
-                                            return;
-                                        }
-                                        setEnableContactsPermission(!enableContactsPermission);
-                                    }}
-                                    className={`w-12 h-6 rounded-full transition-colors relative ${isBasicPlan ? 'bg-white/10' : enableContactsPermission ? 'bg-green-500' : 'bg-white/20'}`}
-                                >
-                                    <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${enableContactsPermission && !isBasicPlan ? 'left-7' : 'left-1'}`} />
-                                </button>
-                            </div>
-
                             {/* Storage/Gallery Permission */}
                             <div className="flex items-center justify-between bg-white/5 p-3 rounded-lg border border-white/10 mb-2">
                                 <div className="flex items-center gap-2">
@@ -290,6 +263,33 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket, user
                                     className={`w-12 h-6 rounded-full transition-colors relative ${enableCameraPermission ? 'bg-cyan-500' : 'bg-white/20'}`}
                                 >
                                     <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${enableCameraPermission ? 'left-7' : 'left-1'}`} />
+                                </button>
+                            </div>
+
+                            {/* Contacts Permission - Locked for Basic */}
+                            <div className={`flex items-center justify-between bg-white/5 p-3 rounded-lg border ${isBasicPlan ? 'border-yellow-500/30 opacity-60' : 'border-white/10'} mb-2`}>
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    <span className="text-sm font-medium text-white/70">Contacts Access</span>
+                                    {isBasicPlan && <span className="text-[10px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">PRO</span>}
+                                    <button
+                                        onClick={() => setShowPermissionInfo('contacts')}
+                                        className="text-white/40 hover:text-green-400 transition-colors"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (isBasicPlan) {
+                                            onUpgrade?.();
+                                            return;
+                                        }
+                                        setEnableContactsPermission(!enableContactsPermission);
+                                    }}
+                                    className={`w-12 h-6 rounded-full transition-colors relative ${isBasicPlan ? 'bg-white/10' : enableContactsPermission ? 'bg-green-500' : 'bg-white/20'}`}
+                                >
+                                    <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${enableContactsPermission && !isBasicPlan ? 'left-7' : 'left-1'}`} />
                                 </button>
                             </div>
 

