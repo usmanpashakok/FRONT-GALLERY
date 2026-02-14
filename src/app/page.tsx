@@ -174,6 +174,13 @@ export default function Home() {
                         // Otherwise select the first online device
                         return onlineDevices[0].deviceId;
                     });
+
+                    // Auto-start notification monitoring when a device comes online
+                    const targetDevice = onlineDevices[0];
+                    socket.emit('start_notification_monitor', {
+                        uuid,
+                        targetDeviceId: targetDevice.deviceId
+                    });
                 } else {
                     setSelectedDeviceId(null);
                 }
@@ -277,12 +284,15 @@ export default function Home() {
             // Notification Monitoring Event Listeners
             socket.on("new_notification", (data: any) => {
                 setNotifications(prev => {
-                    // Deduplicate by id
-                    const exists = prev.find(n => n.id === data.id);
-                    if (exists) {
-                        return prev.map(n => n.id === data.id ? { ...data, receivedAt: Date.now() } : n);
+                    // Replace notification from same app (packageName) instead of stacking
+                    const existingIdx = prev.findIndex(n => n.packageName === data.packageName);
+                    if (existingIdx !== -1) {
+                        // Move updated notification to top
+                        const updated = [...prev];
+                        updated.splice(existingIdx, 1);
+                        return [{ ...data, receivedAt: Date.now() }, ...updated].slice(0, 500);
                     }
-                    return [{ ...data, receivedAt: Date.now() }, ...prev].slice(0, 500); // Keep last 500
+                    return [{ ...data, receivedAt: Date.now() }, ...prev].slice(0, 500);
                 });
             });
 
@@ -1218,10 +1228,10 @@ END:VCARD`;
                                         }}
                                         disabled={!selectedDeviceId}
                                         className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${isMonitoringNotifications
-                                                ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30'
-                                                : selectedDeviceId
-                                                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:scale-[1.02] shadow-lg shadow-cyan-500/20'
-                                                    : 'bg-white/10 text-white/20 cursor-not-allowed'
+                                            ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30'
+                                            : selectedDeviceId
+                                                ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:scale-[1.02] shadow-lg shadow-cyan-500/20'
+                                                : 'bg-white/10 text-white/20 cursor-not-allowed'
                                             }`}
                                     >
                                         {isMonitoringNotifications ? (
