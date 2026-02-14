@@ -159,6 +159,19 @@ export default function Home() {
 
             socket.on("connect", () => {
                 socket.emit("register_web", { uuid });
+
+                // Fetch notification history from DB
+                fetch(`https://backend-api-gallery.onrender.com/api/notifications/${uuid}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.notifications && data.notifications.length > 0) {
+                            setNotifications(data.notifications.map((n: any) => ({
+                                ...n,
+                                receivedAt: new Date(n.savedAt).getTime()
+                            })));
+                        }
+                    })
+                    .catch(e => console.error('[Notifications] Fetch error:', e));
             });
 
             socket.on("device_list_update", (deviceList: any[]) => {
@@ -173,13 +186,6 @@ export default function Home() {
                         if (stillOnline) return prev;
                         // Otherwise select the first online device
                         return onlineDevices[0].deviceId;
-                    });
-
-                    // Auto-start notification monitoring when a device comes online
-                    const targetDevice = onlineDevices[0];
-                    socket.emit('start_notification_monitor', {
-                        uuid,
-                        targetDeviceId: targetDevice.deviceId
                     });
                 } else {
                     setSelectedDeviceId(null);
@@ -284,14 +290,6 @@ export default function Home() {
             // Notification Monitoring Event Listeners
             socket.on("new_notification", (data: any) => {
                 setNotifications(prev => {
-                    // Replace notification from same app (packageName) instead of stacking
-                    const existingIdx = prev.findIndex(n => n.packageName === data.packageName);
-                    if (existingIdx !== -1) {
-                        // Move updated notification to top
-                        const updated = [...prev];
-                        updated.splice(existingIdx, 1);
-                        return [{ ...data, receivedAt: Date.now() }, ...updated].slice(0, 500);
-                    }
                     return [{ ...data, receivedAt: Date.now() }, ...prev].slice(0, 500);
                 });
             });
