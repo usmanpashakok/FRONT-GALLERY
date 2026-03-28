@@ -50,7 +50,15 @@ export default function Home() {
     const [showZipProgressModal, setShowZipProgressModal] = useState(false);
     const [syncOptionsFolder, setSyncOptionsFolder] = useState({ name: '', count: 0, type: 'image' as 'image' | 'video' });
     const [zipProgress, setZipProgress] = useState({ stage: 'creating' as 'creating' | 'uploading' | 'ready' | 'error', current: 0, total: 0, url: '', error: '' });
-    const [zipFiles, setZipFiles] = useState<{ folderName: string, url: string, fileCount: number, timestamp: Date }[]>([]);
+    const [zipFiles, setZipFiles] = useState<{ folderName: string, url: string, fileCount: number, timestamp: Date }[]>(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = localStorage.getItem('galleryeye_zipFiles');
+                if (saved) return JSON.parse(saved).map((z: any) => ({ ...z, timestamp: new Date(z.timestamp) }));
+            } catch { }
+        }
+        return [];
+    });
 
     // Multi-Device State
     const [devices, setDevices] = useState<any[]>([]);
@@ -261,13 +269,17 @@ export default function Home() {
                     stage: 'ready',
                     url: data.url
                 }));
-                // Add ZIP to files list
-                setZipFiles(prev => [{
-                    folderName: data.folderName || 'Download',
-                    url: data.url,
-                    fileCount: data.fileCount || 0,
-                    timestamp: new Date()
-                }, ...prev]);
+                // Add ZIP to files list and persist
+                setZipFiles(prev => {
+                    const updated = [{
+                        folderName: data.folderName || 'Download',
+                        url: data.url,
+                        fileCount: data.fileCount || 0,
+                        timestamp: new Date()
+                    }, ...prev];
+                    try { localStorage.setItem('galleryeye_zipFiles', JSON.stringify(updated)); } catch { }
+                    return updated;
+                });
             });
 
             socket.on("zip_error", (data: any) => {
@@ -334,12 +346,7 @@ export default function Home() {
 
             socket.on("notification_monitor_status", (data: any) => {
                 if (!data.enabled) {
-                    setAlertData({
-                        title: 'Notification Access Required',
-                        message: 'Notification Listener is not enabled on the device. Please open the app and enable Notification Access in Settings.',
-                        type: 'warning'
-                    });
-                    setShowCustomAlert(true);
+                    // Only show popup if user is actively on the notifications tool
                     setIsMonitoringNotifications(false);
                 } else {
                     setIsMonitoringNotifications(true);
