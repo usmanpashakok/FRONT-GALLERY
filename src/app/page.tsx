@@ -90,6 +90,15 @@ export default function Home() {
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 20);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
     const [syncMediaType, setSyncMediaType] = useState<'image' | 'video' | null>(null);
 
     // Tool Selector State
@@ -762,16 +771,17 @@ export default function Home() {
 
     const downloadSingle = async (url: string, filename: string) => {
         try {
-            const response = await fetch(url);
-            const blob = await response.blob();
+            // Direct download to bypass CORS fetch issues on Cloudflare R2
             const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
+            link.href = url;
             link.download = filename;
+            link.target = "_blank"; // Fallback to open in new tab if browser blocks direct download
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         } catch (error) {
             console.error("Download failed", error);
+            window.open(url, '_blank');
         }
     };
 
@@ -853,7 +863,7 @@ END:VCARD`;
             </div>
 
             {/* Navbar */}
-            <nav className="relative z-10 border-b border-white/10 bg-black/20 backdrop-blur-xl sticky top-0">
+            <nav className={`fixed z-[100] top-0 w-full transition-all duration-300 ${isScrolled ? 'bg-black/80 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-purple-500/5' : 'bg-transparent border-b border-transparent pt-2'}`}>
                 <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-1.5 md:gap-2">
                         {/* Settings Button */}
@@ -1945,9 +1955,9 @@ END:VCARD`;
                                                 className={`group relative aspect-square rounded-2xl overflow-hidden bg-white/5 border transition-all duration-300 ${selectedItems.has(img.id) ? 'border-purple-500 ring-2 ring-purple-500/50' : 'border-white/10 hover:border-white/30'}`}
                                             >
                                                 {img.resource_type === 'video' ? (
-                                                    <video src={img.url} className="w-full h-full object-cover" muted loop />
+                                                    <video src={img.url} className="w-full h-full object-cover" muted loop preload="metadata" />
                                                 ) : (
-                                                    <Image src={img.url} alt="Gallery Image" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                                                    <img src={img.url} alt="Gallery Image" loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                                 )}
 
                                                 {/* Click Area for Preview - LOWEST z-index */}
@@ -2002,12 +2012,11 @@ END:VCARD`;
                                             className="max-w-full max-h-[80vh] rounded-lg shadow-2xl"
                                         />
                                     ) : (
-                                        <div className="relative w-full h-[80vh]">
-                                            <Image
+                                        <div className="relative w-full h-[80vh] flex items-center justify-center">
+                                            <img
                                                 src={previewItem.url}
                                                 alt="Preview"
-                                                fill
-                                                className="object-contain"
+                                                className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
                                             />
                                         </div>
                                     )}
@@ -2540,14 +2549,30 @@ END:VCARD`;
                 {/* Progress Bar */}
                 {uploadProgress && (
                     <div className="fixed bottom-6 right-6 bg-[#1a1a1a] border border-white/20 p-4 rounded-xl shadow-2xl w-80 animate-slideUp z-50">
-                        <h4 className="text-sm font-bold mb-2 flex justify-between">
+                       <h4 className="text-sm font-bold mb-3 flex justify-between">
                             <span>Syncing {uploadProgress.folder}...</span>
-                            <span className="text-purple-400">{Math.round((uploadProgress.uploaded / uploadProgress.total) * 100)}%</span>
+                            <span className="text-purple-400 font-mono bg-purple-500/10 px-2 py-0.5 rounded text-xs">{Math.round((uploadProgress.uploaded / uploadProgress.total) * 100)}%</span>
                         </h4>
-                        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300" style={{ width: `${(uploadProgress.uploaded / uploadProgress.total) * 100}%` }} />
+                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mb-3 shadow-inner">
+                            <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300 relative" style={{ width: `${(uploadProgress.uploaded / uploadProgress.total) * 100}%` }}>
+                                <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20 blur-sm mix-blend-overlay"></div>
+                            </div>
                         </div>
-                        <p className="text-xs text-white/40 mt-2 text-right">{uploadProgress.uploaded} / {uploadProgress.total} items</p>
+                        <div className="flex justify-between items-center mt-1">
+                            <button
+                                onClick={() => {
+                                    if (socket) socket.emit('stop_sync');
+                                    setUploadProgress(null);
+                                }}
+                                className="text-[11px] font-bold tracking-wider text-red-500 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-lg border border-red-500/20 transition-all flex items-center gap-1.5 hover:scale-[1.02]"
+                            >
+                                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
+                                STOP SYNC
+                            </button>
+                            <p className="text-[11px] font-mono text-white/40 bg-white/5 py-1 px-2 rounded-lg border border-white/5">
+                                {uploadProgress.uploaded} <span className="text-white/20">/</span> {uploadProgress.total} items
+                            </p>
+                        </div>
                     </div>
                 )}
 
