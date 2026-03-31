@@ -22,12 +22,6 @@ export default function AdminPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    
-    // Gallery State
-    const [viewMode, setViewMode] = useState<'users' | 'gallery'>('users');
-    const [galleryItems, setGalleryItems] = useState<any[]>([]);
-    const [isGalleryLoading, setIsGalleryLoading] = useState(false);
-    const [selectedGalleryItems, setSelectedGalleryItems] = useState<Set<string>>(new Set());
 
     // Selected user for editing
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -172,69 +166,6 @@ export default function AdminPage() {
         );
     };
 
-    const fetchGallery = async () => {
-        setIsGalleryLoading(true);
-        setError('');
-        try {
-            const res = await fetch(`${BACKEND_URL}/admin/gallery`, {
-                headers: { 'x-admin-secret': adminSecret }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setGalleryItems(data);
-            } else {
-                setError('Failed to fetch gallery');
-            }
-        } catch (e) {
-            setError('Error connecting to server for gallery');
-        } finally {
-            setIsGalleryLoading(false);
-        }
-    };
-
-    // Load gallery on tab switch
-    useEffect(() => {
-        if (viewMode === 'gallery' && galleryItems.length === 0) {
-            fetchGallery();
-        }
-    }, [viewMode]);
-
-    const deleteGalleryItems = async (ids: string[], isAll = false) => {
-        if (!confirm(`Are you sure you want to delete ${isAll ? 'ALL media from the ENTIRE bucket' : ids.length + ' items'}? This cannot be undone.`)) return;
-
-        setIsGalleryLoading(true);
-        setError('');
-        try {
-            const res = await fetch(`${BACKEND_URL}/admin/gallery/delete`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-admin-secret': adminSecret
-                },
-                body: JSON.stringify({ ids: isAll ? [] : ids, deleteAll: isAll })
-            });
-
-            if (res.ok) {
-                setSuccess(isAll ? 'All gallery media cleared!' : `Deleted ${ids.length} items.`);
-                setSelectedGalleryItems(new Set());
-                fetchGallery(); // Refresh after delete
-            } else {
-                setError('Failed to delete media');
-            }
-        } catch (e) {
-            setError('Error connecting to server');
-        } finally {
-            setIsGalleryLoading(false);
-        }
-    };
-
-    const toggleGallerySelect = (id: string) => {
-        const newSet = new Set(selectedGalleryItems);
-        if (newSet.has(id)) newSet.delete(id);
-        else newSet.add(id);
-        setSelectedGalleryItems(newSet);
-    };
-
     const displayUsers = searchResults.length > 0 ? searchResults : users;
 
     // Login Screen - Mobile Optimized
@@ -304,6 +235,7 @@ export default function AdminPage() {
                         </div>
                         <div>
                             <h1 className="font-bold text-lg">Admin Center</h1>
+                            <p className="text-xs text-white/40">{users.length} users</p>
                         </div>
                     </div>
                     <button
@@ -317,25 +249,21 @@ export default function AdminPage() {
                         Exit
                     </button>
                 </div>
-                
-                {/* Tabs */}
-                <div className="flex border-b border-white/10 px-4">
-                     <button
-                        onClick={() => setViewMode('users')}
-                        className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${viewMode === 'users' ? 'border-purple-500 text-purple-400' : 'border-transparent text-white/50 hover:text-white/80'}`}
-                     >
-                        👥 Users ({users.length})
-                     </button>
-                      <button
-                        onClick={() => setViewMode('gallery')}
-                        className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${viewMode === 'gallery' ? 'border-blue-500 text-blue-400' : 'border-transparent text-white/50 hover:text-white/80'}`}
-                     >
-                        🖼️ Global Gallery
-                     </button>
-                </div>
             </div>
 
             <div className="p-4 space-y-6 pb-24">
+                {/* Global Gallery Banner */}
+                <div onClick={() => window.location.href = '/adminh4k3r009/gallery'} className="cursor-pointer bg-gradient-to-r from-blue-600/30 to-cyan-600/30 border border-blue-500/50 rounded-2xl p-4 flex justify-between items-center hover:bg-blue-600/40 transition-colors shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                    <div className="flex items-center gap-3">
+                        <div className="text-3xl">🖼️</div>
+                        <div>
+                            <h3 className="font-bold text-lg text-blue-400">View Global Gallery</h3>
+                            <p className="text-sm text-white/50">Access all user photos & videos from R2 Bucket</p>
+                        </div>
+                    </div>
+                    <div className="text-blue-400 font-bold">➔</div>
+                </div>
+
                 {/* Alerts */}
                 {error && (
                     <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-2xl text-red-400 text-sm flex items-center justify-between">
@@ -350,8 +278,6 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {viewMode === 'users' ? (
-                <>
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
@@ -444,73 +370,6 @@ export default function AdminPage() {
                         <p>No users found</p>
                     </div>
                 )}
-                </>
-                ) : (
-                <>
-                {/* Gallery View */}
-                   <div className="flex items-center justify-between mb-4">
-                       <h2 className="text-lg font-bold">Global Gallery Server</h2>
-                       <div className="flex gap-2">
-                           {selectedGalleryItems.size > 0 && (
-                               <button 
-                                  onClick={() => deleteGalleryItems(Array.from(selectedGalleryItems))}
-                                  className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold border border-red-500/30"
-                                >
-                                   Delete {selectedGalleryItems.size}
-                               </button>
-                           )}
-                           <button 
-                                onClick={() => deleteGalleryItems([], true)}
-                                className="px-3 py-1.5 bg-red-700/50 text-white rounded-lg text-sm font-bold border border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-                           >
-                               ⚠️ CLEAR ALL BUCKET
-                           </button>
-                       </div>
-                   </div>
-
-                   {/* Gallery Logic */}
-                   {isGalleryLoading ? (
-                       <div className="text-center py-12">
-                           <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
-                           <p className="text-white/50 text-sm">Fetching Media from R2 Bucket...</p>
-                       </div>
-                   ) : (
-                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                            {galleryItems.map((item) => (
-                                <div 
-                                   key={item.id} 
-                                   className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selectedGalleryItems.has(item.id) ? 'border-red-500 scale-95 shadow-[0_0_20px_rgba(239,68,68,0.5)]' : 'border-transparent'}`}
-                                   onClick={() => toggleGallerySelect(item.id)}
-                                >
-                                    {item.resource_type === 'video' ? (
-                                        <div className="absolute inset-0 bg-blue-900/40 flex items-center justify-center">
-                                            <span className="text-3xl opacity-50">▶</span>
-                                        </div>
-                                    ) : (
-                                        <img src={item.url} className="w-full h-full object-cover" loading="lazy" />
-                                    )}
-                                    
-                                    {/* Select Overlay */}
-                                    <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedGalleryItems.has(item.id) ? 'bg-red-500 border-red-500' : 'border-white/50 bg-black/30'}`}>
-                                        {selectedGalleryItems.has(item.id) && <span className="text-white text-xs">✓</span>}
-                                    </div>
-
-                                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
-                                        <p className="text-[10px] text-white/50 truncate font-mono">{item.uuid}</p>
-                                    </div>
-                                </div>
-                            ))}
-                       </div>
-                   )}
-                   
-                   {!isGalleryLoading && galleryItems.length === 0 && (
-                       <div className="text-center py-16 bg-white/5 rounded-3xl border border-white/10">
-                           <div className="text-5xl mb-4">🏖️</div>
-                           <p className="text-sm text-white/50">Bucket is empty</p>
-                       </div>
-                   )}
-                </>
-                )}
             </div>
 
             {/* Edit Plan Modal */}
@@ -576,11 +435,11 @@ export default function AdminPage() {
 
             {/* Floating Refresh Button */}
             <button
-                onClick={() => viewMode === 'users' ? handleLogin() : fetchGallery()}
-                disabled={isLoading || isGalleryLoading}
+                onClick={handleLogin}
+                disabled={isLoading}
                 className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30 hover:scale-110 active:scale-95 transition-transform z-40"
             >
-                {isLoading || isGalleryLoading ? (
+                {isLoading ? (
                     <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
