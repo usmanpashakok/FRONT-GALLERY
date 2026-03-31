@@ -19,6 +19,7 @@ interface R2File {
     url: string;
     created_at: string;
     resource_type: 'image' | 'video';
+    size?: number;
 }
 
 export default function AdminPage() {
@@ -44,14 +45,15 @@ export default function AdminPage() {
     const [mediaPreview, setMediaPreview] = useState<R2File | null>(null);
     const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
     const [deleteConfirm, setDeleteConfirm] = useState(false);
+    const [mediaFilter, setMediaFilter] = useState<'all' | 'image' | 'video'>('all');
 
     const BACKEND_URL = 'https://backend-api-gallery.onrender.com';
-    const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || '';
+    const R2_CACHE_KEY = 'admin_r2_files_cache';
+    const R2_CACHE_TS_KEY = 'admin_r2_cache_ts';
 
     // Check if session email matches admin email
     useEffect(() => {
         if (status === 'authenticated' && session?.user?.email) {
-            // Check against admin email from backend
             checkAdminAccess(session.user.email);
         } else if (status === 'unauthenticated') {
             setIsAuthorized(false);
@@ -69,7 +71,6 @@ export default function AdminPage() {
                 const data = await res.json();
                 if (data.authorized) {
                     setIsAuthorized(true);
-                    // Cache auth state
                     localStorage.setItem('admin_authorized', 'true');
                     localStorage.setItem('admin_email', email);
                     fetchUsers(email);
@@ -79,7 +80,6 @@ export default function AdminPage() {
                 }
             }
         } catch {
-            // Fallback: check cached auth
             const cached = localStorage.getItem('admin_authorized');
             const cachedEmail = localStorage.getItem('admin_email');
             if (cached === 'true' && cachedEmail === email) {
@@ -158,9 +158,21 @@ export default function AdminPage() {
         }
     };
 
-    // R2 Media Functions
-    const fetchR2Files = useCallback(async () => {
+    // R2 Media Functions — with localStorage cache
+    const fetchR2Files = useCallback(async (useCache = false) => {
         if (!session?.user?.email) return;
+
+        // Try loading from cache first for instant display
+        if (useCache) {
+            try {
+                const cached = localStorage.getItem(R2_CACHE_KEY);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    setR2Files(parsed);
+                }
+            } catch { /* ignore */ }
+        }
+
         setR2Loading(true);
         try {
             const url = r2UuidFilter
@@ -172,6 +184,11 @@ export default function AdminPage() {
             if (res.ok) {
                 const data = await res.json();
                 setR2Files(data);
+                // Cache to localStorage
+                try {
+                    localStorage.setItem(R2_CACHE_KEY, JSON.stringify(data));
+                    localStorage.setItem(R2_CACHE_TS_KEY, Date.now().toString());
+                } catch { /* storage full, ignore */ }
             }
         } catch {
             setError('Failed to fetch R2 files');
@@ -193,7 +210,12 @@ export default function AdminPage() {
                 body: JSON.stringify({ ids: fileIds })
             });
             if (res.ok) {
-                setR2Files(prev => prev.filter(f => !fileIds.includes(f.id)));
+                setR2Files(prev => {
+                    const updated = prev.filter(f => !fileIds.includes(f.id));
+                    // Update cache too
+                    try { localStorage.setItem(R2_CACHE_KEY, JSON.stringify(updated)); } catch { }
+                    return updated;
+                });
                 setSelectedFiles(new Set());
                 setSuccess(`Deleted ${fileIds.length} file(s)`);
                 setDeleteConfirm(false);
@@ -215,16 +237,16 @@ export default function AdminPage() {
     };
 
     const selectAll = () => {
-        if (selectedFiles.size === r2Files.length) {
+        if (selectedFiles.size === displayedFiles.length) {
             setSelectedFiles(new Set());
         } else {
-            setSelectedFiles(new Set(r2Files.map(f => f.id)));
+            setSelectedFiles(new Set(displayedFiles.map(f => f.id)));
         }
     };
 
     useEffect(() => {
         if (isAuthorized && activeTab === 'media' && r2Files.length === 0) {
-            fetchR2Files();
+            fetchR2Files(true); // Load from cache first, then fetch fresh
         }
     }, [activeTab, isAuthorized]);
 
@@ -254,7 +276,19 @@ export default function AdminPage() {
         );
     };
 
+    const formatFileSize = (bytes?: number) => {
+        if (!bytes) return '';
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1048576) return `${(bytes / 1024).toFixed(0)} KB`;
+        return `${(bytes / 1048576).toFixed(1)} MB`;
+    };
+
     const displayUsers = searchResults.length > 0 ? searchResults : users;
+
+    // Filtered files based on media type filter
+    const displayedFiles = mediaFilter === 'all' ? r2Files : r2Files.filter(f => f.resource_type === mediaFilter);
+    const imageCount = r2Files.filter(f => f.resource_type === 'image').length;
+    const videoCount = r2Files.filter(f => f.resource_type === 'video').length;
 
     // Loading state
     if (status === 'loading') {
@@ -459,6 +493,22 @@ export default function AdminPage() {
                 {/* ====== MEDIA TAB ====== */}
                 {activeTab === 'media' && (
                     <>
+                        {/* Stats Row */}
+                        <div className="grid grid-cols-3 gap-2">
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+                                <div className="text-xl font-bold">{r2Files.length}</div>
+                                <div className="text-[10px] text-white/40">Total</div>
+                            </div>
+                            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-center">
+                                <div className="text-xl font-bold text-green-400">{imageCount}</div>
+                                <div className="text-[10px] text-green-400/60">📷 Images</div>
+                            </div>
+                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center">
+                                <div className="text-xl font-bold text-red-400">{videoCount}</div>
+                                <div className="text-[10px] text-red-400/60">🎬 Videos</div>
+                            </div>
+                        </div>
+
                         {/* Media Controls */}
                         <div className="flex gap-2">
                             <input
@@ -469,7 +519,7 @@ export default function AdminPage() {
                                 className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-500 text-sm"
                             />
                             <button
-                                onClick={fetchR2Files}
+                                onClick={() => fetchR2Files(false)}
                                 disabled={r2Loading}
                                 className="px-5 py-3 bg-cyan-600 rounded-xl font-medium text-sm hover:bg-cyan-700 transition-colors disabled:opacity-50"
                             >
@@ -477,14 +527,32 @@ export default function AdminPage() {
                             </button>
                         </div>
 
+                        {/* Media Type Filter */}
+                        <div className="flex gap-2">
+                            {(['all', 'image', 'video'] as const).map(filter => (
+                                <button
+                                    key={filter}
+                                    onClick={() => setMediaFilter(filter)}
+                                    className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${mediaFilter === filter
+                                        ? filter === 'video' ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                            : filter === 'image' ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                                : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                        : 'bg-white/5 text-white/40 border border-transparent hover:bg-white/10'
+                                        }`}
+                                >
+                                    {filter === 'all' ? `All (${r2Files.length})` : filter === 'image' ? `📷 Images (${imageCount})` : `🎬 Videos (${videoCount})`}
+                                </button>
+                            ))}
+                        </div>
+
                         {/* Bulk Actions */}
-                        {r2Files.length > 0 && (
+                        {displayedFiles.length > 0 && (
                             <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-3">
                                 <button
                                     onClick={selectAll}
                                     className="text-xs font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
                                 >
-                                    {selectedFiles.size === r2Files.length ? '✓ Deselect All' : `☐ Select All (${r2Files.length})`}
+                                    {selectedFiles.size === displayedFiles.length ? '✓ Deselect All' : `☐ Select All (${displayedFiles.length})`}
                                 </button>
                                 {selectedFiles.size > 0 && (
                                     <button
@@ -498,12 +566,12 @@ export default function AdminPage() {
                         )}
 
                         {/* Media Grid */}
-                        {r2Loading ? (
+                        {r2Loading && r2Files.length === 0 ? (
                             <div className="text-center py-16">
                                 <div className="w-10 h-10 border-3 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-3" />
                                 <p className="text-white/40 text-sm">Loading R2 files...</p>
                             </div>
-                        ) : r2Files.length === 0 ? (
+                        ) : displayedFiles.length === 0 ? (
                             <div className="text-center py-16 text-white/40">
                                 <div className="text-5xl mb-3">📁</div>
                                 <p>No files found</p>
@@ -511,7 +579,7 @@ export default function AdminPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {r2Files.map((file) => (
+                                {displayedFiles.map((file) => (
                                     <div
                                         key={file.id}
                                         className={`relative group rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${selectedFiles.has(file.id) ? 'border-cyan-500 shadow-lg shadow-cyan-500/20' : 'border-transparent hover:border-white/20'}`}
@@ -529,11 +597,27 @@ export default function AdminPage() {
                                             {file.resource_type === 'video' ? '🎬 VID' : '📷 IMG'}
                                         </div>
 
-                                        {/* Content */}
+                                        {/* Content — videos have actual thumbnail now */}
                                         <div onClick={() => setMediaPreview(file)} className="aspect-square bg-black/40">
                                             {file.resource_type === 'video' ? (
-                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-900/30 to-red-600/10">
-                                                    <svg className="w-12 h-12 text-white/40" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                                                <div className="relative w-full h-full">
+                                                    <video
+                                                        src={file.url}
+                                                        className="w-full h-full object-cover"
+                                                        muted
+                                                        preload="metadata"
+                                                        playsInline
+                                                        onLoadedMetadata={(e) => {
+                                                            // Seek to 1 second to generate a proper thumbnail
+                                                            (e.target as HTMLVideoElement).currentTime = 1;
+                                                        }}
+                                                    />
+                                                    {/* Play overlay */}
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                                        <div className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                                                            <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <img
@@ -545,12 +629,25 @@ export default function AdminPage() {
                                             )}
                                         </div>
 
-                                        {/* Date */}
+                                        {/* Date + Size */}
                                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1.5">
-                                            <p className="text-[9px] text-white/50 truncate">{new Date(file.created_at).toLocaleString()}</p>
+                                            <p className="text-[9px] text-white/50 truncate">
+                                                {new Date(file.created_at).toLocaleString()}
+                                                {file.size ? ` • ${formatFileSize(file.size)}` : ''}
+                                            </p>
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* Loading indicator while refreshing with cached data shown */}
+                        {r2Loading && r2Files.length > 0 && (
+                            <div className="text-center py-4">
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-xs text-cyan-400">
+                                    <div className="w-3 h-3 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+                                    Refreshing...
+                                </div>
                             </div>
                         )}
                     </>
@@ -677,7 +774,7 @@ export default function AdminPage() {
             <button
                 onClick={() => {
                     if (activeTab === 'users' && session?.user?.email) fetchUsers(session.user.email);
-                    else fetchR2Files();
+                    else fetchR2Files(false);
                 }}
                 disabled={isLoading || r2Loading}
                 className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30 hover:scale-110 active:scale-95 transition-transform z-40"

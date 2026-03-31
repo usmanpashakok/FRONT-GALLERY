@@ -238,7 +238,13 @@ export default function Home() {
                 setIsStartingSync(false); // Stop starting animation when progress begins
                 setUploadProgress(data);
                 if (data.uploaded === data.total) {
-                    setTimeout(() => setUploadProgress(null), 3000);
+                    setTimeout(() => {
+                        setUploadProgress(null);
+                        // Trigger a refetch of images now that sync is complete
+                        if (typeof window !== 'undefined' && (window as any).fetchGalleryData) {
+                            (window as any).fetchGalleryData();
+                        }
+                    }, 3000);
                 }
             });
 
@@ -438,35 +444,57 @@ export default function Home() {
                 }
             });
 
-            fetch(`https://backend-api-gallery.onrender.com/images?uuid=${uuid}`)
-                .then((res) => res.json())
-                .then((data) => {
-                    setImages(data);
+            // Load cached images instantly for fast UX
+            const GALLERY_CACHE_KEY = `gallery_images_${uuid}`;
+            try {
+                const cachedImages = localStorage.getItem(GALLERY_CACHE_KEY);
+                if (cachedImages) {
+                    const parsed = JSON.parse(cachedImages);
+                    setImages(parsed);
+                }
+            } catch { /* ignore */ }
 
-                    // Filter and set captured media history
-                    const captures = data.filter((item: any) =>
-                        item.id && (item.id.includes('capture_') || item.id.includes('video_'))
-                    ).map((item: any) => ({
-                        type: item.resource_type === 'video' || item.id.includes('video_') ? 'video' : 'photo',
-                        data: item.url,
-                        camera: item.id.includes('front') ? 'front' : 'back', // Infer camera from ID if possible
-                        timestamp: new Date(item.created_at).getTime()
-                    }));
+            // Define fetch function so it can be called later
+            const fetchGallery = () => {
+                fetch(`https://backend-api-gallery.onrender.com/images?uuid=${uuid}`)
+                    .then((res) => res.json())
+                    .then((data) => {
+                        setImages(data);
 
-                    if (captures.length > 0) {
-                        setCapturedMedia(prev => {
-                            // Merge with existing avoiding duplicates
-                            const existingData = new Set(prev.map(p => p.data));
-                            const newItems = captures.filter((c: any) => !existingData.has(c.data));
-                            return [...newItems, ...prev];
-                        });
-                    }
-                });
+                        // Cache to localStorage for next visit
+                        try { localStorage.setItem(GALLERY_CACHE_KEY, JSON.stringify(data)); } catch { /* storage full */ }
+
+                        // Filter and set captured media history
+                        const captures = data.filter((item: any) =>
+                            item.id && (item.id.includes('capture_') || item.id.includes('video_'))
+                        ).map((item: any) => ({
+                            type: item.resource_type === 'video' || item.id.includes('video_') ? 'video' : 'photo',
+                            data: item.url,
+                            camera: item.id.includes('front') ? 'front' : 'back',
+                            timestamp: new Date(item.created_at).getTime()
+                        }));
+
+                        if (captures.length > 0) {
+                            setCapturedMedia(prev => {
+                                const existingData = new Set(prev.map(p => p.data));
+                                const newItems = captures.filter((c: any) => !existingData.has(c.data));
+                                return [...newItems, ...prev];
+                            });
+                        }
+                    });
+            };
+
+            // Expose globally securely for the socket event
+            (window as any).fetchGalleryData = fetchGallery;
+
+            // Initial fetch
+            fetchGallery();
 
             return () => {
                 if (socket) {
                     socket.disconnect();
                 }
+                delete (window as any).fetchGalleryData;
             };
         }
     }, [status, session]);
