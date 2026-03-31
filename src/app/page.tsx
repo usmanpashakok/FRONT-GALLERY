@@ -354,12 +354,6 @@ export default function Home() {
             });
 
             socket.on("notification_error", (data: any) => {
-                setAlertData({
-                    title: 'Notification Monitor Error',
-                    message: data.message || 'Failed to start notification monitoring.',
-                    type: 'error'
-                });
-                setShowCustomAlert(true);
                 setIsMonitoringNotifications(false);
             });
 
@@ -1296,16 +1290,6 @@ END:VCARD`;
                             {/* Notification Monitoring Tool */}
                             {selectedTool === 'notifications' && (
                                 <div className="space-y-4">
-                                    {/* Permission Info Banner */}
-                                    {!isMonitoringNotifications && notifications.length === 0 && (
-                                        <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                                            <svg className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
-                                            <div>
-                                                <p className="text-sm font-medium text-amber-300">Notification Access Required</p>
-                                                <p className="text-xs text-amber-400/60 mt-1">To receive notifications from the device, you must manually enable <strong>Notification Listener</strong> permission in the device&apos;s Settings → Apps → Special Access → Notification Access.</p>
-                                            </div>
-                                        </div>
-                                    )}
                                     {/* App Filter Bar */}
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
