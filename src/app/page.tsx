@@ -2113,56 +2113,88 @@ END:VCARD`;
                                 </button>
                             </div>
                             <div className="max-h-[60vh] overflow-y-auto p-2">
-                                {devices.filter(d => d.online).length > 0 ? (
-                                    devices.filter(d => d.online).map((device, idx) => {
+                                {devices.length > 0 ? (
+                                    devices.map((device, idx) => {
                                         const isLocked = idx >= planLimits.maxDevices;
+                                        const isOffline = !device.online;
                                         return (
-                                            <button
-                                                key={device.deviceId}
-                                                onClick={() => {
-                                                    if (isLocked) {
-                                                        setShowPlansModal(true);
-                                                        setIsDeviceDropdownOpen(false);
-                                                    } else {
-                                                        setSelectedDeviceId(device.deviceId);
-                                                        setIsDeviceDropdownOpen(false);
-                                                    }
-                                                }}
-                                                className={`w-full text-left px-4 py-4 rounded-xl mb-2 flex items-center justify-between transition-colors ${isLocked
-                                                    ? 'bg-white/5 border border-white/10 opacity-60'
-                                                    : selectedDeviceId === device.deviceId
-                                                        ? 'bg-purple-500/20 border border-purple-500/50'
-                                                        : 'bg-white/5 border border-transparent hover:bg-white/10'
+                                            <div key={device.deviceId} className="relative group mb-2">
+                                                <button
+                                                    onClick={() => {
+                                                        if (isLocked) {
+                                                            setShowPlansModal(true);
+                                                            setIsDeviceDropdownOpen(false);
+                                                        } else if (!isOffline) {
+                                                            setSelectedDeviceId(device.deviceId);
+                                                            setIsDeviceDropdownOpen(false);
+                                                        }
+                                                    }}
+                                                    className={`w-full text-left px-4 py-4 rounded-xl flex items-center justify-between transition-colors ${
+                                                        isLocked
+                                                            ? 'bg-white/5 border border-white/10 opacity-60'
+                                                            : isOffline
+                                                                ? 'bg-white/5 border border-white/10 opacity-60 cursor-not-allowed'
+                                                                : selectedDeviceId === device.deviceId
+                                                                    ? 'bg-purple-500/20 border border-purple-500/50'
+                                                                    : 'bg-white/5 border border-transparent hover:bg-white/10'
                                                     }`}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-3 h-3 rounded-full ${isLocked ? 'bg-red-500' : 'bg-green-500'}`} />
-                                                    <div>
-                                                        <div className="font-medium flex items-center gap-2">
-                                                            {device.name}
-                                                            {isLocked && (
-                                                                <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400">🔒 Locked</span>
-                                                            )}
-                                                        </div>
-                                                        <div className={`text-xs ${isLocked ? 'text-red-400' : 'text-green-400'}`}>
-                                                            {isLocked ? 'Upgrade to unlock' : 'Online'}
+                                                >
+                                                    <div className="flex items-center gap-3 pr-10">
+                                                        <div className={`w-3 h-3 rounded-full flex-shrink-0 ${isLocked ? 'bg-red-500' : isOffline ? 'bg-gray-500' : 'bg-green-500'}`} />
+                                                        <div className="overflow-hidden">
+                                                            <div className="font-medium flex items-center gap-2 truncate">
+                                                                {device.name || 'Unknown Device'}
+                                                                {isLocked && (
+                                                                    <span className="flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">🔒 Lck</span>
+                                                                )}
+                                                            </div>
+                                                            <div className={`text-xs truncate ${isLocked ? 'text-red-400' : isOffline ? 'text-gray-400' : 'text-green-400'}`}>
+                                                                {isLocked ? 'Upgrade to unlock' : isOffline ? `Offline (Seen: ${new Date(device.lastSeen).toLocaleDateString()})` : 'Online'}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                {!isLocked && selectedDeviceId === device.deviceId && (
-                                                    <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                    {!isLocked && !isOffline && selectedDeviceId === device.deviceId && (
+                                                        <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                    )}
+                                                    {isLocked && (
+                                                        <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                                    )}
+                                                </button>
+
+                                                {/* Delete Button for Offline Devices */}
+                                                {isOffline && (
+                                                    <button
+                                                        onClick={async (e) => {
+                                                            e.stopPropagation();
+                                                            if (!confirm(`Are you sure you want to delete ${device.name}?`)) return;
+                                                            try {
+                                                                const res = await fetch('https://backend-api-gallery.onrender.com/api/devices/delete', {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({ uuid: session?.user?.uuid, deviceId: device.deviceId })
+                                                                });
+                                                                if (!res.ok) {
+                                                                    const data = await res.json();
+                                                                    alert(data.error || 'Failed to delete device');
+                                                                }
+                                                            } catch (err) {
+                                                                alert('Network error deleting device');
+                                                            }
+                                                        }}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/30 md:opacity-0 group-hover:opacity-100 transition-all z-10"
+                                                        title="Delete offline device"
+                                                    >
+                                                        🗑️
+                                                    </button>
                                                 )}
-                                                {isLocked && (
-                                                    <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                                )}
-                                            </button>
+                                            </div>
                                         );
                                     })
                                 ) : (
                                     <div className="text-center py-8 text-white/40">
                                         <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                        <p>No devices online</p>
-                                        <p className="text-xs mt-1">Open the app on your phone</p>
+                                        <p>No devices found</p>
+                                        <p className="text-xs mt-1">Open the app on your phone to connect</p>
                                     </div>
                                 )}
                             </div>
