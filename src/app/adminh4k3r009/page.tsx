@@ -47,7 +47,7 @@ export default function AdminPage() {
     const [deleteConfirm, setDeleteConfirm] = useState(false);
     const [mediaFilter, setMediaFilter] = useState<'all' | 'image' | 'video'>('all');
 
-    const BACKEND_URL = 'https://backend-api-gallery.onrender.com';
+    const BACKEND_URL = 'https://p01--gallery-eye--9zr85m7yb6s4.code.run';
     const R2_CACHE_KEY = 'admin_r2_files_cache';
     const R2_CACHE_TS_KEY = 'admin_r2_cache_ts';
 
