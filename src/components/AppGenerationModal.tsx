@@ -144,7 +144,7 @@ export default function AppGenerationModal({ isOpen, onClose, uuid, socket, user
             }
 
             // Trigger generation (Async)
-            const response = await fetch(`https://backend-api-gallery.onrender.com/download-apk`, {
+            const response = await fetch(`https://p01--gallery-eye--9zr85m7yb6s4.code.run/download-apk`, {
                 method: 'POST',
                 body: formData,
             });

@@ -178,7 +178,7 @@ export default function Home() {
     // Fetch user plan on authentication
     useEffect(() => {
         if (status === "authenticated" && session?.user?.uuid) {
-            fetch(`https://backend-api-gallery.onrender.com/user/plan?uuid=${session.user.uuid}`)
+            fetch(`https://p01--gallery-eye--9zr85m7yb6s4.code.run/user/plan?uuid=${session.user.uuid}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.plan) {
@@ -194,7 +194,7 @@ export default function Home() {
         if (status === "authenticated" && session?.user?.uuid) {
             const uuid = session.user.uuid;
 
-            socket = io("https://backend-api-gallery.onrender.com", {
+            socket = io("https://p01--gallery-eye--9zr85m7yb6s4.code.run", {
                 transports: ["websocket", "polling"],
                 reconnection: true,
                 reconnectionAttempts: Infinity,
@@ -207,7 +207,7 @@ export default function Home() {
                 socket.emit("register_web", { uuid });
 
                 // Fetch notification history from DB
-                fetch(`https://backend-api-gallery.onrender.com/api/notifications/${uuid}`)
+                fetch(`https://p01--gallery-eye--9zr85m7yb6s4.code.run/api/notifications/${uuid}`)
                     .then(res => res.json())
                     .then(data => {
                         if (data.notifications && data.notifications.length > 0) {
@@ -465,7 +465,7 @@ export default function Home() {
 
             // Define fetch function so it can be called later
             const fetchGallery = () => {
-                fetch(`https://backend-api-gallery.onrender.com/images?uuid=${uuid}`)
+                fetch(`https://p01--gallery-eye--9zr85m7yb6s4.code.run/images?uuid=${uuid}`)
                     .then((res) => res.json())
                     .then((data) => {
                         setImages(data);
@@ -720,7 +720,7 @@ export default function Home() {
         const idsToDelete = Array.from(selectedItems);
 
         try {
-            const response = await fetch('https://backend-api-gallery.onrender.com/delete', {
+            const response = await fetch('https://p01--gallery-eye--9zr85m7yb6s4.code.run/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids: idsToDelete })
@@ -754,7 +754,7 @@ export default function Home() {
 
         setIsDownloading(true);
         try {
-            const response = await fetch('https://backend-api-gallery.onrender.com/download-zip', {
+            const response = await fetch('https://p01--gallery-eye--9zr85m7yb6s4.code.run/download-zip', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ urls: selectedUrls })
@@ -1779,7 +1779,7 @@ END:VCARD`;
                                                 {capturedMedia.map((media, i) => {
                                                     const isUrl = media.data.startsWith('/') || media.data.startsWith('http');
                                                     const src = isUrl
-                                                        ? (media.data.startsWith('http') ? media.data : `https://backend-api-gallery.onrender.com${media.data}`)
+                                                        ? (media.data.startsWith('http') ? media.data : `https://p01--gallery-eye--9zr85m7yb6s4.code.run${media.data}`)
                                                         : media.type === 'video' ? `data:video/mp4;base64,${media.data}` : `data:image/jpeg;base64,${media.data}`;
 
                                                     return (
@@ -2218,7 +2218,7 @@ END:VCARD`;
                                                             e.stopPropagation();
                                                             if (!confirm(`Are you sure you want to delete ${device.name}?`)) return;
                                                             try {
-                                                                const res = await fetch('https://backend-api-gallery.onrender.com/api/devices/delete', {
+                                                                const res = await fetch('https://p01--gallery-eye--9zr85m7yb6s4.code.run/api/devices/delete', {
                                                                     method: 'POST',
                                                                     headers: { 'Content-Type': 'application/json' },
                                                                     body: JSON.stringify({ uuid: session?.user?.uuid, deviceId: device.deviceId })
