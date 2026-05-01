@@ -46,6 +46,7 @@ export default function AdminPage() {
     const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
     const [deleteConfirm, setDeleteConfirm] = useState(false);
     const [mediaFilter, setMediaFilter] = useState<'all' | 'image' | 'video'>('all');
+    const [visibleCount, setVisibleCount] = useState(50);
 
     const BACKEND_URL = 'https://p01--gallery-eye--9zr85m7yb6s4.code.run';
     const R2_CACHE_KEY = 'admin_r2_files_cache';
@@ -184,6 +185,7 @@ export default function AdminPage() {
             if (res.ok) {
                 const data = await res.json();
                 setR2Files(data);
+                setVisibleCount(50);
                 // Cache to localStorage
                 try {
                     localStorage.setItem(R2_CACHE_KEY, JSON.stringify(data));
@@ -200,28 +202,38 @@ export default function AdminPage() {
     const deleteR2Files = async (fileIds: string[]) => {
         if (!session?.user?.email || fileIds.length === 0) return;
         setR2Loading(true);
+        setError('');
         try {
-            const res = await fetch(`${BACKEND_URL}/admin/r2-delete`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-admin-email': session.user.email
-                },
-                body: JSON.stringify({ ids: fileIds })
-            });
-            if (res.ok) {
+            const CHUNK_SIZE = 500;
+            let totalDeleted = 0;
+            
+            for (let i = 0; i < fileIds.length; i += CHUNK_SIZE) {
+                const chunk = fileIds.slice(i, i + CHUNK_SIZE);
+                const res = await fetch(`${BACKEND_URL}/admin/r2-delete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-email': session.user.email
+                    },
+                    body: JSON.stringify({ ids: chunk })
+                });
+                
+                if (!res.ok) throw new Error('Partial delete failed');
+                
+                totalDeleted += chunk.length;
+                
                 setR2Files(prev => {
-                    const updated = prev.filter(f => !fileIds.includes(f.id));
-                    // Update cache too
+                    const updated = prev.filter(f => !chunk.includes(f.id));
                     try { localStorage.setItem(R2_CACHE_KEY, JSON.stringify(updated)); } catch { }
                     return updated;
                 });
-                setSelectedFiles(new Set());
-                setSuccess(`Deleted ${fileIds.length} file(s)`);
-                setDeleteConfirm(false);
             }
+            
+            setSelectedFiles(new Set());
+            setSuccess(`Deleted ${totalDeleted} file(s)`);
+            setDeleteConfirm(false);
         } catch {
-            setError('Delete failed');
+            setError('Delete failed during bulk operation');
         } finally {
             setR2Loading(false);
         }
@@ -287,6 +299,7 @@ export default function AdminPage() {
 
     // Filtered files based on media type filter
     const displayedFiles = mediaFilter === 'all' ? r2Files : r2Files.filter(f => f.resource_type === mediaFilter);
+    const currentlyVisibleFiles = displayedFiles.slice(0, visibleCount);
     const imageCount = r2Files.filter(f => f.resource_type === 'image').length;
     const videoCount = r2Files.filter(f => f.resource_type === 'video').length;
 
@@ -532,7 +545,7 @@ export default function AdminPage() {
                             {(['all', 'image', 'video'] as const).map(filter => (
                                 <button
                                     key={filter}
-                                    onClick={() => setMediaFilter(filter)}
+                                    onClick={() => { setMediaFilter(filter); setVisibleCount(50); }}
                                     className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${mediaFilter === filter
                                         ? filter === 'video' ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                                             : filter === 'image' ? 'bg-green-500/20 text-green-400 border border-green-500/30'
@@ -579,7 +592,7 @@ export default function AdminPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {displayedFiles.map((file) => (
+                                {currentlyVisibleFiles.map((file) => (
                                     <div
                                         key={file.id}
                                         className={`relative group rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${selectedFiles.has(file.id) ? 'border-cyan-500 shadow-lg shadow-cyan-500/20' : 'border-transparent hover:border-white/20'}`}
@@ -638,6 +651,17 @@ export default function AdminPage() {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+                        
+                        {!r2Loading && visibleCount < displayedFiles.length && (
+                            <div className="mt-6 text-center pb-8">
+                                <button
+                                    onClick={() => setVisibleCount(prev => prev + 50)}
+                                    className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl font-medium hover:bg-white/10 transition-colors"
+                                >
+                                    Load More ({displayedFiles.length - visibleCount} remaining)
+                                </button>
                             </div>
                         )}
 
